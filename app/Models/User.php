@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Mongodb\Laravel\Auth\User as Authenticatable;
+use MongoDB\Laravel\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Tymon\JWTAuth\Contracts\JWTSubject;
@@ -15,7 +15,7 @@ class User extends Authenticatable implements JWTSubject
 
     protected $connection = 'mongodb';
 
-    protected $collection = 'users';
+    protected $table = 'users';
 
     /**
      * Retourne l'identifiant JWT

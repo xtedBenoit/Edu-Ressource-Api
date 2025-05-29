@@ -9,7 +9,7 @@ class Subject extends Model
 {
 
     protected $connection = 'mongodb';
-    protected $collection = 'subjects';
+    protected $table = 'subjects';
 
     protected $fillable = [
         'nom',

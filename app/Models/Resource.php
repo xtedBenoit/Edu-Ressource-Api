@@ -10,7 +10,7 @@ class Resource extends Model
 
     protected $connection = 'mongodb';
 
-    protected $collection = 'resources';
+    protected $table = 'resources';
 
     protected $fillable = [
         'titre',

@@ -7,10 +7,8 @@ use MongoDB\Laravel\Eloquent\Model;
 
 class ValidationLog extends Model
 {
-    use HasFactory;
-
     protected $connection = 'mongodb';
-    protected $collection = 'validation_logs';
+    protected $table = 'validation_logs';
 
     protected $fillable = [
         'resource_id',

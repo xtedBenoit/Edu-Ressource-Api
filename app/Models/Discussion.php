@@ -3,14 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Mongodb\Laravel\Eloquent\Model;
+use MongoDB\Laravel\Eloquent\Model;
 
 class Discussion extends Model
 {
     use HasFactory;
 
     protected $connection = 'mongodb';
-    protected $collection = 'discussions';
+    protected $table = 'discussions';
 
     protected $fillable = [
         'titre',

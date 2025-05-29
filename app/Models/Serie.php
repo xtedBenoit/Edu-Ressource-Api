@@ -8,7 +8,7 @@ use MongoDB\Laravel\Eloquent\Model;
 class Serie extends Model
 {
     protected $connection = 'mongodb';
-    protected $collection = 'series';
+    protected $table = 'series';
 
     protected $fillable = [
         'titre',

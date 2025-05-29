@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Api\Auth;
 
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Tymon\JWTAuth\Exceptions\JWTException;
@@ -17,44 +20,33 @@ class AuthController extends Controller
     /**
      * Enregistrement d'un nouvel utilisateur
      */
-    public function register(Request $request)
+    public function register(RegisterRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name'     => 'required|string|max:255',
-            'username' => 'required|string|unique:users',
-            'email'    => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6|confirmed',
-        ]);
-
-        if ($validator->fails()) {
-            return ApiResponse::validationError($validator->errors());
-        }
-
         $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'username' => $request->username,
-            'password' => Hash::make($request->password),
-            'role'     => 'user',
-            'refresh_token' => Str::random(64),
+            'name'                 => $request->name,
+            'username'             => $request->username,
+            'email'                => $request->email,
+            'password'             => Hash::make($request->password),
+            'role'                 => $request->role,
+            'refresh_token'        => Str::random(64),
             'refresh_token_expiry' => now()->addDays(7),
         ]);
 
         $token = JWTAuth::fromUser($user);
 
         return ApiResponse::success([
-            'access_token' => $token,
+            'access_token'  => $token,
             'refresh_token' => $user->refresh_token,
-            'token_type' => 'bearer',
-            'expires_in' => auth('api')->factory()->getTTL() * 60,
-            'user' => $user
+            'token_type'    => 'bearer',
+            'expires_in'    => auth('api')->factory()->getTTL() * 60,
+            'user'          => $user
         ], 'Utilisateur enregistré avec succès');
     }
 
     /**
      * Connexion de l'utilisateur
      */
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
         $credentials = $request->only('email', 'password');
 
@@ -79,6 +71,7 @@ class AuthController extends Controller
             'user' => $user
         ], 'Connexion réussie');
     }
+
 
     /**
      * Rafraîchir le token
@@ -118,6 +111,68 @@ class AuthController extends Controller
         } catch (JWTException $e) {
             return ApiResponse::error('Erreur lors de la déconnexion', null, 500);
         }
+    }
+
+    /**
+     * Envoi du code de réinitialisation de mot de passe
+     */
+    public function sendResetCode(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        $code = rand(100000, 999999); // Code à 6 chiffres
+
+        $user->reset_token = $code;
+        $user->reset_token_expiry = now()->addMinutes(15);
+        $user->save();
+
+        Mail::send('emails.reset-password', [
+            'user' => $user,
+            'code' => $code,
+        ], function ($message) use ($user) {
+            $message->to($user->email);
+            $message->subject('Votre code de réinitialisation');
+        });
+
+        return response()->json([
+            'message' => 'Code envoyé par email'
+        ]);
+
+    }
+
+     /**
+     * Réinitialisation du mot de passe
+     */
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+            'code' => 'required|string|size:6',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = User::where('email', $request->email)
+                    ->where('reset_token', $request->code)
+                    ->first();
+
+        if (!$user) {
+            return ApiResponse::error('Code de réinitialisation invalide', null, 400);
+        }
+
+        if (!$user->reset_token_expiry || now()->greaterThan($user->reset_token_expiry)) {
+            return ApiResponse::error('Code expiré. Veuillez demander un nouveau code.', null, 400);
+        }
+
+        $user->password = Hash::make($request->password);
+        $user->reset_token = null;
+        $user->reset_token_expiry = null;
+        $user->save();
+
+        return ApiResponse::success(null, 'Mot de passe réinitialisé avec succès.');
     }
 
     /**

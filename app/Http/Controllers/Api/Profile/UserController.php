@@ -6,6 +6,7 @@ use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -57,4 +58,75 @@ class UserController extends Controller
         $users = User::all();
         return ApiResponse::success($users);
     }
+
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = auth()->user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return ApiResponse::error('Mot de passe actuel incorrect.', null, 400);
+        }
+
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        return ApiResponse::success(null, 'Mot de passe mis à jour avec succès.');
+    }
+
+
+    /**
+     * Mettre à jour ou ajouter une photo de profil pour l'utilisateur connecté.
+     */
+    public function uploadAvatar(Request $request)
+    {
+        $user = auth()->user();
+
+        // Validation conditionnelle
+        $request->validate([
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'avatar_url' => 'nullable|url',
+        ]);
+
+        if ($request->hasFile('avatar')) {
+            // Traitement upload fichier
+            $filename = uniqid() . '.' . $request->avatar->extension();
+            $path = $request->avatar->storeAs('images/avatars', $filename, 'public');
+            $user->profile_image = '/storage/' . $path;
+        } elseif ($request->filled('avatar_url')) {
+            // Utiliser l'URL
+            $user->profile_image = $request->avatar_url;
+        } else {
+            return ApiResponse::error('Veuillez fournir un fichier avatar ou une URL valide.', null, 422);
+        }
+
+        $user->save();
+
+        return ApiResponse::success([
+            'profile_image' => $user->profile_image
+        ], 'Image de profil mise à jour avec succès.');
+    }
+
+    /**
+     * Supprime l'avatar de l'utilisateur.
+     */ 
+    public function deleteAvatar()
+    {
+        $user = auth()->user();
+
+        // Option 1 : juste supprimer la référence (avatar remis à null)
+        $user->profile_image = null;
+
+        // Option 2 : si tu as une image par défaut, tu peux la mettre ici
+        // $user->profile_image = '/images/default-avatar.png';
+
+        $user->save();
+
+        return ApiResponse::success(null, 'Image de profil supprimée avec succès.');
+    }
+
 }

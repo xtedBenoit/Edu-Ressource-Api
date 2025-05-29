@@ -9,7 +9,7 @@ class Classe extends Model
 {
 
     protected $connection = 'mongodb';
-    protected $collection = 'classes';
+    protected $table = 'classes';
 
     protected $fillable = [
         'nom',

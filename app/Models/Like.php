@@ -8,7 +8,7 @@ use MongoDB\Laravel\Eloquent\Model;
 class Like extends Model
 {
     protected $connection = 'mongodb';
-    protected $collection = 'likes';
+    protected $table = 'likes';
 
     protected $fillable = [
         'resource_id',

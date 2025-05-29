@@ -13,7 +13,17 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', 'EduRessource'),
+
+    'dev_name' => env('APP_DEVNAME', 'EduRessource'), //Only name for  app : MASFINANCE
+
+    'dev_contact' => env('APP_DEV_TEL', '+22870881076'), //Only name for  app : MASFINANCE
+
+    'contact_email' => env('CONTACT_EMAIL', 'edu_resource@gmail.com'), // Only email for  app : MASFINANCE
+
+    'client_name' => env('APP_CLIENT_NAME', 'EduRessource'), //Only name for  app : MASFINANCE
+
+    'version' => env('APP_VERSION', '1.0.0'), // Version of app
 
     /*
     |--------------------------------------------------------------------------
@@ -53,6 +63,8 @@ return [
     */
 
     'url' => env('APP_URL', 'http://localhost'),
+
+    'asset_url' => env('ASSET_URL', null),
 
     /*
     |--------------------------------------------------------------------------

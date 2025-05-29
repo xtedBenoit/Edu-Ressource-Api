@@ -4,12 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\Storage;
-use Mongodb\Laravel\Eloquent\Model;
+use MongoDB\Laravel\Eloquent\Model;
 
 class Message extends Model
 {
     protected $connection = 'mongodb';
-    protected $collection = 'messages';
+    protected $table = 'messages';
 
     protected $fillable = [
         'contenu',
