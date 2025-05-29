@@ -15,16 +15,21 @@ class Resource extends Model
     protected $fillable = [
         'titre',
         'description',
-        'type_fichier',
-        'url',
-        'auteur_id',
+        'type', // pdf, image, lien
+        'chemin_fichier', // ou lien vers S3
+        'auteur_id', // ref user
         'classe_id',
-        'serie_id',
         'subject_id',
-        'validee_auto',
-        'validee_humaine',
-        'mots_cles_detectes',
-        'score_confiance'
+        'serie_id',
+        'mots_cles', // tableau
+        'score_confiance',
+        'valide',
+        'commentaire_validation',
+        'valide_par',
+        'valide_le',
+        'downloads',
+        'fichier_hash',
+        'discussions' // facultatif
     ];
 
     protected $casts = [
@@ -33,6 +38,22 @@ class Resource extends Model
         'mots_cles_detectes' => 'array',
         'score_confiance' => 'float'
     ];
+
+    protected static function booted()
+    {
+        static::ensureIndexes();
+    }
+
+    protected static function ensureIndexes()
+    {
+        static::raw(function ($collection) {
+            $collection->createIndex(
+                ['fichier_hash' => 1],
+                ['unique' => true, 'sparse' => true] // sparse = ignore les documents sans ce champ
+            );
+        });
+    }
+
 
     public function auteur()
     {

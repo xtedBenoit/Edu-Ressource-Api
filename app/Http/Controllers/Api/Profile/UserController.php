@@ -29,7 +29,6 @@ class UserController extends Controller
             'name' => 'nullable|string',
             'username' => 'nullable|string|unique:users,username,' . $user->_id,
             'bio' => 'nullable|string',
-            'profile_image' => 'nullable|string',
         ]);
 
         $user->update($validated);
@@ -59,6 +58,9 @@ class UserController extends Controller
         return ApiResponse::success($users);
     }
 
+    /**
+     * Changer de mot de passe.
+     */
     public function changePassword(Request $request)
     {
         $request->validate([

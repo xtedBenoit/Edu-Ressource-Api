@@ -15,12 +15,11 @@ class Serie extends Model
         'description',
         'classe_id',
         'subject_id',
-        'auteur_id',
-        'ordre_recommande'
+        'mots_cles',
     ];
 
     protected $casts = [
-        'ordre_recommande' => 'array'
+        'mots_cles' => 'array'
     ];
 
     public function resources()

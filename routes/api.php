@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Profile\UserController;
+use App\Http\Controllers\Api\Resource\ResourceController;
 use Illuminate\Support\Facades\Route;
+
 
 
 /*
@@ -15,6 +17,20 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+
+// Routes publiques
+Route::prefix('ressources')->group(function () {
+    Route::get('/', [ResourceController::class, 'index']);   // Liste filtrée et paginée
+    Route::get('{id}', [ResourceController::class, 'show']); // Voir une ressource
+});
+
+// Routes protégées (authentification requise)
+Route::middleware('auth:api')->prefix('ressources')->group(function () {
+    Route::post('/', [ResourceController::class, 'store']);        // Soumettre une ressource
+    Route::get('{id}/download', [ResourceController::class, 'download']); // Télécharger
+    Route::delete('{id}', [ResourceController::class, 'destroy']); // Supprimer
+});
+
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login',    [AuthController::class, 'login']);

@@ -6,6 +6,7 @@ use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Mail\ResetCodeMail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -130,17 +131,9 @@ class AuthController extends Controller
         $user->reset_token_expiry = now()->addMinutes(15);
         $user->save();
 
-        Mail::send('emails.reset-password', [
-            'user' => $user,
-            'code' => $code,
-        ], function ($message) use ($user) {
-            $message->to($user->email);
-            $message->subject('Votre code de réinitialisation');
-        });
+        Mail::to($user->email)->send(new ResetCodeMail($code, $user));
 
-        return response()->json([
-            'message' => 'Code envoyé par email'
-        ]);
+       return ApiResponse::success(null, 'Code de réinitialisation envoyé par email');
 
     }
 

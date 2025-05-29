@@ -15,11 +15,11 @@ class Subject extends Model
         'nom',
         'description',
         'code',
-        'mots_cles_associes'
+        'mots_cles'
     ];
 
     protected $casts = [
-        'mots_cles_associes' => 'array'
+        'mots_cles' => 'array'
     ];
 
     public function resources()

@@ -14,10 +14,12 @@ class Classe extends Model
     protected $fillable = [
         'nom',
         'niveau',
-        'subject_ids'
+        'subject_ids',
+        'mots_cles'
     ];
 
     protected $casts = [
+        'mots_cles' => 'array',
         'subject_ids' => 'array',
     ];
 
