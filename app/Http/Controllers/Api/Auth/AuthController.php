@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Auth;
 
+use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -26,7 +27,7 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            return ApiResponse::validationError($validator->errors());
         }
 
         $user = User::create([
@@ -41,13 +42,13 @@ class AuthController extends Controller
 
         $token = JWTAuth::fromUser($user);
 
-        return response()->json([
+        return ApiResponse::success([
             'access_token' => $token,
             'refresh_token' => $user->refresh_token,
             'token_type' => 'bearer',
             'expires_in' => auth('api')->factory()->getTTL() * 60,
             'user' => $user
-        ]);
+        ], 'Utilisateur enregistré avec succès');
     }
 
     /**
@@ -59,10 +60,10 @@ class AuthController extends Controller
 
         try {
             if (!$token = JWTAuth::attempt($credentials)) {
-                return response()->json(['error' => 'Identifiants invalides'], 401);
+                return ApiResponse::unauthorized('Identifiants invalides');
             }
         } catch (JWTException $e) {
-            return response()->json(['error' => 'Erreur de connexion'], 500);
+            return ApiResponse::error('Erreur de connexion', null, 500);
         }
 
         $user = auth()->user();
@@ -70,13 +71,13 @@ class AuthController extends Controller
         $user->refresh_token_expiry = now()->addDays(7);
         $user->save();
 
-        return response()->json([
+        return ApiResponse::success([
             'access_token' => $token,
             'refresh_token' => $user->refresh_token,
             'token_type' => 'bearer',
             'expires_in' => auth('api')->factory()->getTTL() * 60,
             'user' => $user
-        ]);
+        ], 'Connexion réussie');
     }
 
     /**
@@ -88,7 +89,7 @@ class AuthController extends Controller
         $user = User::where('refresh_token', $refreshToken)->first();
 
         if (!$user || !$user->isRefreshTokenValid()) {
-            return response()->json(['error' => 'Refresh token invalide ou expiré'], 401);
+            return ApiResponse::unauthorized('Refresh token invalide ou expiré');
         }
 
         $newToken = JWTAuth::fromUser($user);
@@ -98,12 +99,12 @@ class AuthController extends Controller
         $user->refresh_token_expiry = now()->addDays(7);
         $user->save();
 
-        return response()->json([
+        return ApiResponse::success([
             'access_token' => $newToken,
             'refresh_token' => $user->refresh_token,
             'token_type' => 'bearer',
             'expires_in' => auth('api')->factory()->getTTL() * 60,
-        ]);
+        ], 'Token rafraîchi avec succès');
     }
 
     /**
@@ -113,9 +114,9 @@ class AuthController extends Controller
     {
         try {
             JWTAuth::invalidate(JWTAuth::getToken());
-            return response()->json(['message' => 'Déconnexion réussie']);
+            return ApiResponse::success(null, 'Déconnexion réussie');
         } catch (JWTException $e) {
-            return response()->json(['error' => 'Erreur lors de la déconnexion'], 500);
+            return ApiResponse::error('Erreur lors de la déconnexion', null, 500);
         }
     }
 
@@ -124,6 +125,6 @@ class AuthController extends Controller
      */
     public function me()
     {
-        return response()->json(auth()->user());
+        return ApiResponse::success(auth()->user());
     }
 }

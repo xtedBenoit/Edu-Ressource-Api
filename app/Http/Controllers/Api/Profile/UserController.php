@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Profile;
 
+use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -13,7 +14,7 @@ class UserController extends Controller
      */
     public function me(Request $request)
     {
-        return response()->json(auth()->user());
+        return ApiResponse::success(auth()->user());
     }
 
     /**
@@ -32,10 +33,9 @@ class UserController extends Controller
 
         $user->update($validated);
 
-        return response()->json([
-            'message' => 'Profil mis à jour',
+        return ApiResponse::success([
             'user' => $user
-        ]);
+        ], 'Profil mis à jour avec succès');
     }
 
     /**
@@ -46,7 +46,7 @@ class UserController extends Controller
         $user = auth()->user();
         $user->delete();
 
-        return response()->json(['message' => 'Compte supprimé']);
+        return ApiResponse::success(null, 'Compte supprimé avec succès');
     }
 
     /**
@@ -55,6 +55,6 @@ class UserController extends Controller
     public function index()
     {
         $users = User::all();
-        return response()->json($users);
+        return ApiResponse::success($users);
     }
 }
