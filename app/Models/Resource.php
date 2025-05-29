@@ -7,9 +7,9 @@ use MongoDB\Laravel\Eloquent\Model;
 
 class Resource extends Model
 {
-    use HasFactory;
 
     protected $connection = 'mongodb';
+
     protected $collection = 'resources';
 
     protected $fillable = [
@@ -57,6 +57,16 @@ class Resource extends Model
     public function discussion()
     {
         return $this->hasOne(Discussion::class);
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(Message::class);
+    }
+
+    public function likes()
+    {
+        return $this->hasMany(Like::class);
     }
 
     public function validations()

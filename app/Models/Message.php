@@ -8,27 +8,21 @@ use Mongodb\Laravel\Eloquent\Model;
 
 class Message extends Model
 {
-    use HasFactory;
-
     protected $connection = 'mongodb';
     protected $collection = 'messages';
 
     protected $fillable = [
         'contenu',
-        'fichiers_joints',
-        'discussion_id',
+        'resource_id',
         'user_id'
     ];
 
-    protected $casts = [
-        'fichiers_joints' => 'array'
-    ];
 
     protected $with = ['auteur'];
 
-    public function discussion()
+    public function resource()
     {
-        return $this->belongsTo(Discussion::class);
+        return $this->belongsTo(Resource::class);
     }
 
     public function auteur()

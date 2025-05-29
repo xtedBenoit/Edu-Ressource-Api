@@ -7,7 +7,6 @@ use MongoDB\Laravel\Eloquent\Model;
 
 class Subject extends Model
 {
-    use HasFactory;
 
     protected $connection = 'mongodb';
     protected $collection = 'subjects';
