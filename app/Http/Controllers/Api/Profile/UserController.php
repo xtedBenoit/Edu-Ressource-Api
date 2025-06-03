@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Tymon\JWTAuth\Contracts\Providers\Auth;
 
 class UserController extends Controller
 {
@@ -131,4 +132,15 @@ class UserController extends Controller
         return ApiResponse::success(null, 'Image de profil supprimée avec succès.');
     }
 
+    /**
+     * Retourne l'historique des actions de l'utilisateur connecté.
+     */
+    public function getActionsHistory()
+    {
+        $user = auth()->user();
+
+        return ApiResponse::success([
+            'actions_history' => array_reverse($user->actions_history ?? []), // dernier en haut
+        ]);
+    }
 }

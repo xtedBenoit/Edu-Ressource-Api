@@ -90,28 +90,129 @@ class ResourceValidatorService
 
     private function extraireTextePdf(string $cheminPdf): string
     {
-        // Essayer d'abord avec pdftotext
-        try {
-            $process = new Process(['pdftotext', $cheminPdf, '-']);
-            $process->run();
-
-            if ($process->isSuccessful()) {
-                return $process->getOutput();
-            }
-        } catch (\Exception $e) {
-            Log::warning("pdftotext non disponible, utilisation de l'alternative PHP");
+        // 1. Essayer d'abord l'extraction texte standard (pour PDF textuels)
+        $texte = $this->extraireTextePdfStandard($cheminPdf);
+        if (!empty(trim($texte))) {
+            Log::debug("Texte extrait via PDF standard");
+            return $texte;
         }
 
-        // Solution alternative avec smalot/pdfparser
+        // 2. Si échec, essayer l'extraction OCR (pour PDF scannés/images)
+        Log::debug("Aucun texte trouvé via extraction standard, tentative OCR...");
+        return $this->extraireTextePdfOcr($cheminPdf);
+    }
+
+    private function extraireTextePdfStandard(string $cheminPdf): string
+    {
         try {
             $parser = new Parser();
             $pdf = $parser->parseFile($cheminPdf);
             return trim($pdf->getText());
         } catch (\Exception $e) {
-            Log::error("Échec de l'extraction PDF", [
-                'error' => $e->getMessage(),
-                'file' => $cheminPdf
+            Log::warning("Échec extraction PDF standard", ['error' => $e->getMessage()]);
+            return '';
+        }
+    }
+
+    private function extraireTextePdfOcr(string $cheminPdf): string
+    {
+        try {
+            // Solution 1: Utiliser pdftoppm + tesseract (meilleure qualité)
+            $texte = $this->extraireViaPdfToPpm($cheminPdf);
+            if (!empty(trim($texte))) {
+                return $texte;
+            }
+
+            // Solution 2: Fallback - convertir en image puis OCR
+            return $this->extraireViaConversionImage($cheminPdf);
+        } catch (\Exception $e) {
+            Log::error("Échec OCR PDF", ['error' => $e->getMessage()]);
+            return '';
+        }
+    }
+
+    private function extraireViaPdfToPpm(string $cheminPdf): string
+    {
+        // Nécessite poppler-utils et tesseract installés
+        $dossierTemp = sys_get_temp_dir();
+        $prefixImage = tempnam($dossierTemp, 'pdfimg');
+
+        try {
+            // Étape 1: Convertir le PDF en images (une par page)
+            $process = new Process([
+                'pdftoppm',
+                '-r',
+                '300', // Résolution DPI
+                '-png',
+                $cheminPdf,
+                $prefixImage
             ]);
+            $process->mustRun();
+
+            // Étape 2: OCR chaque image générée
+            $texteComplet = '';
+            $images = glob($prefixImage . '*.png');
+
+            foreach ($images as $image) {
+                $process = new Process([
+                    'tesseract',
+                    $image,
+                    'stdout',
+                    '-l',
+                    'fra'
+                ]);
+                $process->mustRun();
+                $texteComplet .= $process->getOutput() . "\n";
+                unlink($image); // Nettoyage
+            }
+
+            return trim($texteComplet);
+        } finally {
+            // Nettoyage des fichiers temporaires
+            if (file_exists($prefixImage)) {
+                unlink($prefixImage);
+            }
+        }
+    }
+
+    private function extraireViaConversionImage(string $cheminPdf): string
+    {
+        // Solution de fallback plus simple mais moins précise
+        try {
+            // Convertir le PDF en une seule image
+            $imageTemp = tempnam(sys_get_temp_dir(), 'pdfocr') . '.png';
+
+            $process = new Process([
+                'convert',
+                '-density',
+                '300',
+                $cheminPdf,
+                '-background',
+                'white',
+                '-alpha',
+                'remove',
+                $imageTemp
+            ]);
+            $process->mustRun();
+
+            // OCR sur l'image résultante
+            $process = new Process([
+                'tesseract',
+                $imageTemp,
+                'stdout',
+                '-l',
+                'fra'
+            ]);
+            $process->mustRun();
+            $texte = $process->getOutput();
+
+            unlink($imageTemp);
+            return trim($texte);
+        } catch (\Exception $e) {
+            if (isset($imageTemp) && file_exists($imageTemp)) {
+                unlink($imageTemp);
+            }
+            Log::error("Échec conversion PDF en image", ['error' => $e->getMessage()]);
             return '';
         }
     }

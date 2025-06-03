@@ -1,9 +1,10 @@
 <?php
 // app/Http/Controllers/QuotaController.php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Other;
 
 use App\Helpers\ApiResponse;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 

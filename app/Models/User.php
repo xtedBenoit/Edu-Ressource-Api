@@ -4,9 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use MongoDB\Laravel\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
+use MongoDB\Laravel\Auth\User as Authenticatable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
@@ -66,6 +67,9 @@ class User extends Authenticatable implements JWTSubject
         'refresh_token_expiry',
         'reset_token',
         'reset_token_expiry',
+        'parrain_code',
+        'parrain_utilise',
+        'actions_history',
     ];
 
     /**
@@ -74,12 +78,22 @@ class User extends Authenticatable implements JWTSubject
      * @var array<string, string>
      */
     protected $casts = [
+        'actions_history' => 'array',
         'downloads_reset_at' => 'datetime',
         'email_verified_at' => 'datetime',
         'password' => 'string',
         'refresh_token_expiry' => 'datetime',
         'reset_token_expiry' => 'datetime',
     ];
+
+    protected static function booted()
+    {
+        static::creating(function ($user) {
+            if (empty($user->parrain_code)) {
+                $user->parrain_code = strtoupper(Str::random(8));
+            }
+        });
+    }
 
     /**
      * Vérifie si le refresh token est valide
@@ -112,6 +126,9 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(Message::class);
     }
 
+    /**
+     * Réinitialise les quotas mensuels si nécessaire.
+     */
     public function resetDownloadQuotaIfNeeded()
     {
         $now = now();
@@ -120,6 +137,8 @@ class User extends Authenticatable implements JWTSubject
             $this->downloads_remaining = 5;
             $this->downloads_reset_at = $now;
             $this->save();
+
+            $this->logAction('reset', 'Quota mensuel réinitialisé à 5');
         }
     }
 
@@ -135,5 +154,16 @@ class User extends Authenticatable implements JWTSubject
         $this->save();
     }
 
-
+    /**
+     * Ajoute une entrée à l'historique d'action de l'utilisateur.
+     */
+    public function logAction(string $type, string $description, int $points = 0): void
+    {
+        $this->push('actions_history', [
+            'type' => $type,
+            'description' => $description,
+            'points' => $points,
+            'timestamp' => now(),
+        ]);
+    }
 }

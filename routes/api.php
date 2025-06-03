@@ -6,8 +6,11 @@ use App\Http\Controllers\Api\Ecole\SerieController;
 use App\Http\Controllers\Api\Ecole\SubjectController;
 use App\Http\Controllers\Api\Profile\UserController;
 use App\Http\Controllers\Api\Resource\ResourceController;
-use App\Http\Controllers\QuotaController;
+use App\Http\Controllers\Other\ParrainageController;
+use App\Http\Controllers\Other\QuotaController;
 use Illuminate\Support\Facades\Route;
+
+
 
 
 
@@ -65,6 +68,9 @@ Route::prefix('v1')->group(function () {
         Route::post('avatar',   [UserController::class, 'uploadAvatar']);
         Route::delete('avatar', [UserController::class, 'deleteAvatar']);
         Route::get('quota', [QuotaController::class, 'showQuota']);
+        Route::post('parrainage', [ParrainageController::class, 'utiliserCodeParrain']);
+        // 📜 Historique d’actions
+        Route::get('actions-history', [UserController::class, 'getActionsHistory']);
     });
 
     // Matières, séries, classes (GET)

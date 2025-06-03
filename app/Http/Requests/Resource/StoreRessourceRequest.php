@@ -16,7 +16,7 @@ class StoreRessourceRequest extends FormRequest
         return [
             'titre' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'type_fichier' => 'required|in:pdf,jpg,jpeg,png,docx',
+            'type' => 'required|in:pdf,jpg,jpeg,png,docx',
             'fichier' => 'required|file|mimes:pdf,jpg,jpeg,png,docx|max:20480',
             'classe_id' => 'required|string|exists:classes,_id',
             'subject_id' => 'required|string|exists:subjects,_id',
@@ -33,8 +33,8 @@ class StoreRessourceRequest extends FormRequest
 
             'description.string' => 'La description doit être une chaîne de caractères.',
 
-            'type_fichier.required' => 'Le type de fichier est requis.',
-            'type_fichier.in' => 'Le type de fichier doit être l’un des suivants : pdf, jpg, jpeg, png, docx.',
+            'type.required' => 'Le type de fichier est requis.',
+            'type.in' => 'Le type de fichier doit être l’un des suivants : pdf, jpg, jpeg, png, docx.',
 
             'fichier.required' => 'Le fichier est requis.',
             'fichier.file' => 'Le fichier doit être un fichier valide.',

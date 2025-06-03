@@ -16,7 +16,7 @@ class Resource extends Model
     protected $fillable = [
         'titre',
         'description',
-        'type_fichier', // pdf, image, lien
+        'type', // pdf, image, lien
         'chemin_fichier', // ou lien vers S3
         'type_ressource', // enum: cours, exercice, etc.
         'auteur_id', // ref user

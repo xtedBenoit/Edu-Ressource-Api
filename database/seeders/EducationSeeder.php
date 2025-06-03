@@ -380,62 +380,55 @@ class EducationSeeder extends Seeder
         // Création des séries avec mots clés étendus
         $series = [
             [
-                'titre' => 'D',
+                'titre' => 'Serie D',
                 'description' => 'Série scientifique D',
-                'mots_cles' => ['d', 'scientifique', 'maths', 'physique', 'chimie', 'svt'],
+                'mots_cles' => ['serie : d', 'scientifique', 'maths', 'physique', 'chimie', 'svt'],
                 'classes' => ['Première', 'Terminale'],
                 'subjects' => ['MATH', 'PC', 'SVT', 'PHILO', 'FR', 'HG', 'ANG']
             ],
             [
-                'titre' => 'C',
+                'titre' => 'Serie C',
                 'description' => 'Série scientifique C',
-                'mots_cles' => ['c', 'scientifique', 'maths', 'physique', 'chimie'],
+                'mots_cles' => ['serie : d', 'scientifique', 'maths', 'physique', 'chimie'],
                 'classes' => ['Première', 'Terminale'],
                 'subjects' => ['MATH', 'PC', 'PHILO', 'FR', 'HG', 'ANG']
             ],
             [
-                'titre' => 'A4',
+                'titre' => 'Serie A4',
                 'description' => 'Série littéraire A4',
-                'mots_cles' => ['a4', 'littéraire', 'français', 'philosophie', 'histoire', 'lettres'],
+                'mots_cles' => ['serie : a4', 'littéraire', 'français', 'philosophie', 'histoire', 'lettres'],
                 'classes' => ['Première', 'Terminale'],
                 'subjects' => ['FR', 'PHILO', 'LITT', 'HG', 'ANG']
             ],
             [
-                'titre' => 'F',
+                'titre' => 'Serie F',
                 'description' => 'Série technique F',
-                'mots_cles' => ['f', 'technique', 'technologie', 'informatique', 'gestion'],
+                'mots_cles' => ['serie : f', 'technique', 'technologie', 'informatique', 'gestion'],
                 'classes' => ['Première', 'Terminale'],
                 'subjects' => ['TECH', 'INFO', 'GEST', 'PHILO', 'FR', 'MATH']
             ],
             [
-                'titre' => 'G1',
+                'titre' => 'Serie G1',
                 'description' => 'Série technique G1',
-                'mots_cles' => ['g1', 'technique', 'gestion', 'comptabilité', 'économie'],
+                'mots_cles' => ['serie : g1', 'technique', 'gestion', 'comptabilité', 'économie'],
                 'classes' => ['Première', 'Terminale'],
                 'subjects' => ['GEST', 'COMPTA', 'SES', 'FR', 'PHILO']
             ],
             [
-                'titre' => 'G2',
+                'titre' => 'Serie G2',
                 'description' => 'Série technique G2',
-                'mots_cles' => ['g2', 'technique', 'droit', 'économie', 'gestion'],
+                'mots_cles' => ['serie : g2', 'technique', 'droit', 'économie', 'gestion'],
                 'classes' => ['Première', 'Terminale'],
                 'subjects' => ['GEST', 'COMPTA', 'DRT', 'SES', 'FR', 'PHILO']
             ],
         ];
 
         foreach ($series as $serieData) {
-            foreach ($serieData['classes'] as $classeNom) {
-                $classeId = $classeMap[$classeNom];
-                foreach ($serieData['subjects'] as $subjectCode) {
-                    Serie::create([
-                        'titre' => $serieData['titre'],
-                        'description' => $serieData['description'],
-                        'mots_cles' => $serieData['mots_cles'],
-                        'classe_id' => $classeId,
-                        'subject_id' => $subjectMap[$subjectCode]
-                    ]);
-                }
-            }
+            Serie::create([
+                'titre' => $serieData['titre'],
+                'description' => $serieData['description'],
+                'mots_cles' => $serieData['mots_cles'],
+            ]);
         }
     }
 }

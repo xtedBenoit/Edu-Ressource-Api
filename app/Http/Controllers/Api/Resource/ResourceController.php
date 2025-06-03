@@ -107,7 +107,7 @@ class ResourceController extends Controller
         $ressource = Resource::create([
             'titre' => $request->titre,
             'description' => $request->description,
-            'type_fichier' => $request->type_fichier,
+            'type' => $request->type_fichier,
             'type_ressource' => $analyse['type_ressource'],
             'chemin_fichier' => $cheminFichier,
             'fichier_hash' => $fichierHash,
