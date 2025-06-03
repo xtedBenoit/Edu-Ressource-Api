@@ -12,7 +12,9 @@
         "laravel/sanctum": "^4.1",
         "laravel/tinker": "^2.10.1",
         "mongodb/laravel-mongodb": "*",
+        "mongodb/mongodb": "^1.21",
         "smalot/pdfparser": "^2.12",
+        "spatie/pdf-to-text": "^1.54",
         "thiagoalessio/tesseract_ocr": "^2.13",
         "tymon/jwt-auth": "^2.2"
     },

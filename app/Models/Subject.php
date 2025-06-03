@@ -37,9 +37,10 @@ class Subject extends Model
         return $this->hasMany(Classe::class, 'subject_ids', '_id');
     }
 
-    public function enseignants()
+    public function getMotsClesArrayAttribute(): array
     {
-        return $this->hasMany(User::class, 'subject_ids', '_id')
-            ->where('role', 'enseignant');
+        return is_array($this->mots_cles) ? $this->mots_cles : (
+            is_string($this->mots_cles) ? json_decode($this->mots_cles, true) ?? [] : []
+        );
     }
 }

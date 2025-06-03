@@ -50,6 +50,8 @@ class User extends Authenticatable implements JWTSubject
         'refresh_token_expiry',
         'reset_token',
         'reset_token_expiry',
+        'downloads_remaining',
+        'downloads_reset_at',
     ];
 
     /**
@@ -72,6 +74,7 @@ class User extends Authenticatable implements JWTSubject
      * @var array<string, string>
      */
     protected $casts = [
+        'downloads_reset_at' => 'datetime',
         'email_verified_at' => 'datetime',
         'password' => 'string',
         'refresh_token_expiry' => 'datetime',
@@ -107,6 +110,29 @@ class User extends Authenticatable implements JWTSubject
     public function comments(): HasMany
     {
         return $this->hasMany(Message::class);
+    }
+
+    public function resetDownloadQuotaIfNeeded()
+    {
+        $now = now();
+
+        if (is_null($this->downloads_reset_at) || $this->downloads_reset_at->lt($now->startOfMonth())) {
+            $this->downloads_remaining = 5;
+            $this->downloads_reset_at = $now;
+            $this->save();
+        }
+    }
+
+    public function decrementDownloadQuota()
+    {
+        $this->downloads_remaining = max(0, $this->downloads_remaining - 1);
+        $this->save();
+    }
+
+    public function addDownloadBonus(int $amount)
+    {
+        $this->downloads_remaining += $amount;
+        $this->save();
     }
 
 

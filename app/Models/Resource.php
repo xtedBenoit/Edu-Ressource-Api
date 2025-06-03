@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ResourceType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MongoDB\Laravel\Eloquent\Model;
 
@@ -15,8 +16,9 @@ class Resource extends Model
     protected $fillable = [
         'titre',
         'description',
-        'type', // pdf, image, lien
+        'type_fichier', // pdf, image, lien
         'chemin_fichier', // ou lien vers S3
+        'type_ressource', // enum: cours, exercice, etc.
         'auteur_id', // ref user
         'classe_id',
         'subject_id',
@@ -29,10 +31,12 @@ class Resource extends Model
         'valide_le',
         'downloads',
         'fichier_hash',
+        'commentaire_validation',
         'discussions' // facultatif
     ];
 
     protected $casts = [
+        'type_ressource' => ResourceType::class,
         'validee_auto' => 'boolean',
         'validee_humaine' => 'boolean',
         'mots_cles_detectes' => 'array',

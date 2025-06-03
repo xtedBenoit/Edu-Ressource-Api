@@ -2,14 +2,20 @@
 
 namespace App\Http\Controllers\Api\Resource;
 
+use App\Enums\ResourceType;
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Resource\StoreRessourceRequest;
 use App\Models\Classe;
 use App\Models\Resource;
 use App\Models\Serie;
 use App\Models\Subject;
+use App\Services\Ressource\ResourceValidatorService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Smalot\PdfParser\Parser;
@@ -60,128 +66,73 @@ class ResourceController extends Controller
     /**
      * Ajouter une nouvelle ressource.
      */
-    public function store(Request $request)
+    public function store(StoreRessourceRequest $request)
     {
-        $request->validate([
-            'titre' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'type' => 'required|in:pdf,jpg,jpeg,png,video',
-            'fichier' => 'nullable|file|mimes:pdf,jpg,jpeg,png,mp4|max:20480',
-            'lien' => 'nullable|url',
-            'classe_id' => 'required|string|exists:classes,id',
-            'subject_id' => 'required|string|exists:subjects,id',
-            'serie_id' => 'required|string|exists:series,id',
-        ]);
+        $fichier = $request->file('fichier');
 
-        $cheminFichier = null;
-        $fichierHash = null;
-
-
-        if ($request->hasFile('fichier')) {
-            $fichier = $request->file('fichier');
-
-            $md5 = md5_file($fichier->getRealPath());
-            $sha1 = sha1_file($fichier->getRealPath());
-            $fichierHash = $md5 . '_' . $sha1;
-
-            // Vérifie si ce fichier existe déjà (hash combiné)
-            if (Resource::where('fichier_hash', $fichierHash)->exists()) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Ce fichier a déjà été publié.',
-                ], 409);
-            }
-            $cheminFichier = $fichier->store('ressources', 'public');
-
-            // Extraction du contenu et validation automatique
-            $motsCles = $this->motsClesFusionnes($request->classe_id, $request->serie_id, $request->subject_id);
-            $contenuTexte = $this->extractTextFromFile($fichier->getRealPath(), $request->type);
-            $pourcentage = $this->pourcentageMotsTrouves($contenuTexte, $motsCles);
-
-            if ($pourcentage < 10) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Le fichier ne contient pas assez de mots-clés pertinents. Rejet automatique.',
-                ], 422);
-            }
-
-            $valide = $pourcentage >= 60;
+        // Hash du fichier pour vérification des doublons (AVANT stockage)
+        $fichierHash = md5_file($fichier->getRealPath());
+        if (Resource::where('fichier_hash', $fichierHash)->exists()) {
+            return ApiResponse::error('Ce fichier a déjà été publié.', 409);
         }
 
+        // Construction du nom de fichier : titre_date.extension
+        $dateSuffix = Carbon::now()->format('Ymd_His');
+        $extension = $fichier->getClientOriginalExtension();
+        $nomFichierOriginal = pathinfo($fichier->getClientOriginalName(), PATHINFO_FILENAME);
+        $nomFichierNettoye = Str::slug($nomFichierOriginal);
+        $nomFichierFinal = $nomFichierNettoye . '_' . $dateSuffix . '.' . $extension;
 
+        // Sauvegarde du fichier dans "storage/app/public/ressources"
+        $cheminFichier = $fichier->storeAs('ressources', $nomFichierFinal, 'public');
+        if (!$cheminFichier) {
+            return ApiResponse::error('Échec de l\'enregistrement du fichier.', 500);
+        }
+
+        // Analyse du fichier (via service)
+        $validator = new ResourceValidatorService();
+        $classe = Classe::find($request->classe_id);
+        $subject = Subject::find($request->subject_id);
+        $serie = Serie::find($request->serie_id);
+
+        $analyse = $validator->analyser(
+            storage_path('app/public/' . $cheminFichier),
+            $extension,
+            $classe,
+            $subject,
+            $serie
+        );
+
+        // Création de la ressource
         $ressource = Resource::create([
             'titre' => $request->titre,
             'description' => $request->description,
-            'type' => $request->type,
+            'type_fichier' => $request->type_fichier,
+            'type_ressource' => $analyse['type_ressource'],
             'chemin_fichier' => $cheminFichier,
             'fichier_hash' => $fichierHash,
-            'auteur_id' => Auth::id(),
+            'auteur_id' => auth()->id(),
             'classe_id' => $request->classe_id,
             'subject_id' => $request->subject_id,
             'serie_id' => $request->serie_id,
-            'valide' => $valide ?? false,
-            'score_confiance' => round($pourcentage ?? 0),
+            'valide' => $analyse['valide'],
+            'score_confiance' => $analyse['score'],
+            'commentaire_validation' => $analyse['commentaire'],
             'downloads' => 0,
         ]);
 
-        return ApiResponse::success($ressource, 'Ressource soumise avec succès. Merci pour votre contribution 👌👌😍', 201);
+        auth()->user()->addDownloadBonus(3); // Bonus de 3 téléchargements
+
+        return ApiResponse::success(
+            $ressource,
+            $analyse['valide']
+                ? 'Ressource validée automatiquement 🎉 - Type: ' . ResourceType::from($analyse['type_ressource'])->label()
+                : 'Ressource en attente de validation humaine 🔎 - Type: ' . ResourceType::from($analyse['type_ressource'])->label(),
+            201
+        );
     }
 
-    private function motsClesFusionnes($classeId, $serieId, $subjectId)
-    {
-        $classe = Classe::find($classeId);
-        $serie = Serie::find($serieId);
-        $matiere = Subject::find($subjectId);
 
-        $mots = [];
-
-        if ($classe) {
-            $mots = array_merge($mots, $classe->mots_cles ?? []);
-            $mots[] = strtolower($classe->nom);
-        }
-
-        if ($serie) {
-            $mots = array_merge($mots, $serie->mots_cles ?? []);
-            $mots[] = strtolower($serie->titre);
-        }
-
-        if ($matiere) {
-            $mots = array_merge($mots, $matiere->mots_cles ?? []);
-            $mots[] = strtolower($matiere->nom);
-        }
-
-        return array_unique(array_map('strtolower', $mots));
-    }
-
-    private function extractTextFromFile($fichierPath, $type)
-    {
-        if ($type === 'pdf') {
-            $parser = new Parser();
-            $pdf = $parser->parseFile($fichierPath);
-            return strtolower($pdf->getText());
-        }
-
-        if (in_array($type, ['jpg', 'jpeg', 'png'])) {
-            $output = shell_exec("tesseract " . escapeshellarg($fichierPath) . " stdout -l fra+eng");
-            return strtolower($output);
-        }
-
-        return '';
-    }
-
-    private function pourcentageMotsTrouves($contenu, $motsCles)
-    {
-        $trouve = 0;
-        foreach ($motsCles as $mot) {
-            if (str_contains($contenu, strtolower($mot))) {
-                $trouve++;
-            }
-        }
-
-        if (count($motsCles) === 0) return 0;
-
-        return ($trouve / count($motsCles)) * 100;
-    }
     /**
      * Afficher une ressource spécifique.
      */
@@ -202,6 +153,7 @@ class ResourceController extends Controller
     public function download($id)
     {
         $ressource = Resource::find($id);
+        $user = auth()->user();
 
         if (!$ressource) {
             return ApiResponse::notFound('Ressource non trouvée.');
@@ -211,6 +163,14 @@ class ResourceController extends Controller
             return ApiResponse::error('Ressource non validée.', null, 403);
         }
 
+        // Réinitialisation du quota si besoin
+        $user->resetDownloadQuotaIfNeeded();
+
+        if ($user->downloads_remaining <= 0) {
+            return ApiResponse::error("Quota atteint. Ajoute une ressource pour débloquer plus !", 403);
+        }
+
+        $user->decrementDownloadQuota();
         $ressource->increment('downloads');
 
         if (Str::startsWith($ressource->chemin_fichier, 'http')) {
@@ -231,7 +191,7 @@ class ResourceController extends Controller
             return ApiResponse::notFound('Ressource non trouvée.');
         }
 
-        if ($ressource->auteur_id !== Auth::id()) {
+        if ($ressource->auteur_id !== auth()->id()) {
             return ApiResponse::unauthorized('Non autorisé.');
         }
 

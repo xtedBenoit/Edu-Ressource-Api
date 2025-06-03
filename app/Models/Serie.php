@@ -41,4 +41,11 @@ class Serie extends Model
     {
         return $this->belongsTo(User::class, 'auteur_id');
     }
+
+    public function getMotsClesArrayAttribute(): array
+    {
+        return is_array($this->mots_cles) ? $this->mots_cles : (
+            is_string($this->mots_cles) ? json_decode($this->mots_cles, true) ?? [] : []
+        );
+    }
 }

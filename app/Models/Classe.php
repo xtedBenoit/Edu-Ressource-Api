@@ -37,4 +37,11 @@ class Classe extends Model
     {
         return $this->hasMany(Subject::class, '_id', 'subject_ids');
     }
+
+    public function getMotsClesArrayAttribute(): array
+    {
+        return is_array($this->mots_cles) ? $this->mots_cles : (
+            is_string($this->mots_cles) ? json_decode($this->mots_cles, true) ?? [] : []
+        );
+    }
 }

@@ -14,13 +14,291 @@ class EducationSeeder extends Seeder
     {
         // Création des matières avec mots clés étendus
         $subjects = [
-            ['nom' => 'Français', 'code' => 'FR', 'mots_cles' => ['français', 'langue', 'grammaire', 'orthographe', 'lecture', 'écriture', 'littérature']],
-            ['nom' => 'Mathématiques', 'code' => 'MATH', 'mots_cles' => ['mathématiques', 'algèbre', 'géométrie', 'calcul', 'arithmétique', 'statistiques', 'analyse']],
-            ['nom' => 'Physique-Chimie', 'code' => 'PC', 'mots_cles' => ['physique', 'chimie', 'science', 'électricité', 'mécanique', 'réactions', 'éléments', 'matière']],
-            ['nom' => 'Sciences de la Vie et de la Terre', 'code' => 'SVT', 'mots_cles' => ['svt', 'biologie', 'écologie', 'géologie', 'terre', 'vie', 'écosystème']],
-            ['nom' => 'Histoire-Géographie', 'code' => 'HG', 'mots_cles' => ['histoire', 'géographie', 'monde', 'civilisation', 'cartographie', 'événements', 'pays']],
+            [
+                'nom' => 'Français',
+                'code' => 'FR',
+                'mots_cles' => [
+                    'français',
+                    'langue française',
+                    'grammaire',
+                    'orthographe',
+                    'conjugaison',
+                    'expression écrite',
+                    'analyse de texte',
+                    'compréhension écrite',
+                    'lecture cursive',
+                    'rédaction',
+                    'type de texte',
+                    'texte narratif',
+                    'texte argumentatif',
+                    'poésie',
+                    'roman',
+                    'nouvelle',
+                    'théâtre',
+                    'fable',
+                    'figure de style',
+                    'comparaison',
+                    'métaphore',
+                    'champ lexical',
+                    'analyse grammaticale',
+                    'classes grammaticales',
+                    'fonctions grammaticales',
+                    'subordonnée',
+                    'complément circonstanciel',
+                    'proposition',
+                    'discours direct',
+                    'discours indirect',
+                    'vocabulaire',
+                    'étymologie',
+                    'sujet de dissertation',
+                    'résumé de texte',
+                    'plan dialectique',
+                    'analyse linéaire',
+                    'lecture analytique',
+                    'orthographe lexicale',
+                    'orthographe grammaticale',
+                    'synthèse de documents',
+                    'lecture comparée',
+                    'analyse thématique'
+                ]
+            ],
+            [
+                'nom' => 'Mathématiques',
+                'code' => 'MATH',
+                'mots_cles' => [
+                    'mathématiques',
+                    'algèbre',
+                    'géométrie',
+                    'arithmétique',
+                    'statistiques',
+                    'probabilités',
+                    'équations',
+                    'fonctions',
+                    'droites',
+                    'paraboles',
+                    'intégrales',
+                    'dérivées',
+                    'limites',
+                    'vecteurs',
+                    'repérage',
+                    'coordonnées',
+                    'calcul littéral',
+                    'fractions',
+                    'nombres relatifs',
+                    'pourcentages',
+                    'produit en croix',
+                    'théorème de Pythagore',
+                    'théorème de Thalès',
+                    'triangle rectangle',
+                    'aires',
+                    'volumes',
+                    'solides',
+                    'cercles',
+                    'angles',
+                    'médiane',
+                    'mode',
+                    'moyenne',
+                    'écart-type',
+                    'distribution',
+                    'tableau de variation',
+                    'intervalles',
+                    'représentation graphique',
+                    'suite numérique',
+                    'arithmétique modulaire',
+                    'résolution de problème',
+                    'inéquation',
+                    'calcul mental',
+                    'géométrie dans l’espace',
+                    'exercice à étapes',
+                    'démonstration',
+                    'justification',
+                    'construction géométrique',
+                    'question ouverte',
+                    'résolution par méthode'
+                ]
+            ],
+            [
+                'nom' => 'Physique-Chimie',
+                'code' => 'PC',
+                'mots_cles' => [
+                    'physique',
+                    'chimie',
+                    'mécanique',
+                    'optique',
+                    'électricité',
+                    'circuits',
+                    'tension',
+                    'intensité',
+                    'résistance',
+                    'loi d’Ohm',
+                    'énergie cinétique',
+                    'énergie potentielle',
+                    'puissance',
+                    'travail',
+                    'masse',
+                    'force',
+                    'poids',
+                    'vitesse',
+                    'accélération',
+                    'réaction chimique',
+                    'équation chimique',
+                    'molécule',
+                    'atome',
+                    'éléments chimiques',
+                    'tableau périodique',
+                    'liaison chimique',
+                    'solution aqueuse',
+                    'acide',
+                    'base',
+                    'pH',
+                    'précipité',
+                    'expérience',
+                    'protocole',
+                    'mesure',
+                    'balance',
+                    'verrerie',
+                    'dilution',
+                    'concentration',
+                    'dosage',
+                    'spectre lumineux',
+                    'ondes',
+                    'pression',
+                    'température',
+                    'changement d’état',
+                    'fusion',
+                    'vaporisation',
+                    'formule chimique',
+                    'modèle atomique',
+                    'valence',
+                    'constante',
+                    'radioactivité',
+                    'calcul d’incertitude',
+                    'exercice expérimental',
+                    'exercice de calcul',
+                    'exercice de synthèse'
+                ]
+            ],
+            [
+                'nom' => 'Sciences de la Vie et de la Terre',
+                'code' => 'SVT',
+                'mots_cles' => [
+                    'svt',
+                    'biologie',
+                    'géologie',
+                    'cellule',
+                    'mitose',
+                    'méiose',
+                    'adn',
+                    'gène',
+                    'mutation',
+                    'reproduction',
+                    'système nerveux',
+                    'système digestif',
+                    'respiration cellulaire',
+                    'photosynthèse',
+                    'écosystème',
+                    'biodiversité',
+                    'cycle de vie',
+                    'cycle de l’eau',
+                    'plaque tectonique',
+                    'volcan',
+                    'séisme',
+                    'strates',
+                    'roches',
+                    'fossiles',
+                    'érosion',
+                    'climat',
+                    'pédologie',
+                    'milieu naturel',
+                    'observation microscopique',
+                    'schéma fonctionnel',
+                    'document scientifique',
+                    'exercice de restitution',
+                    'exercice de comparaison',
+                    'expérience',
+                    'interprétation de graphique',
+                    'analyse de coupe géologique',
+                    'anatomie',
+                    'génétique',
+                    'évolution'
+                ]
+            ],
+            [
+                'nom' => 'Histoire-Géographie',
+                'code' => 'HG',
+                'mots_cles' => [
+                    'histoire',
+                    'géographie',
+                    'civilisation',
+                    'révolution française',
+                    'première guerre mondiale',
+                    'deuxième guerre mondiale',
+                    'guerre froide',
+                    'colonisation',
+                    'décolonisation',
+                    'grandes découvertes',
+                    'monarchie',
+                    'république',
+                    'totalitarisme',
+                    'démocratie',
+                    'carte',
+                    'territoire',
+                    'population',
+                    'flux migratoires',
+                    'urbanisation',
+                    'mondialisation',
+                    'géopolitique',
+                    'pays développés',
+                    'pays émergents',
+                    'développement durable',
+                    'aléas naturels',
+                    'risques',
+                    'relief',
+                    'climat',
+                    'exercice de carte',
+                    'frise chronologique',
+                    'analyse de document historique',
+                    'croquis',
+                    'schéma géographique',
+                    'question problématisée',
+                    'analyse de texte historique'
+                ]
+            ],
             ['nom' => 'Anglais', 'code' => 'ANG', 'mots_cles' => ['anglais', 'langue', 'vocabulaire', 'grammaire', 'conversation', 'lecture']],
-            ['nom' => 'Philosophie', 'code' => 'PHILO', 'mots_cles' => ['philosophie', 'pensée', 'ethique', 'morale', 'logique', 'raisonnement']],
+            [
+                'nom' => 'Philosophie',
+                'code' => 'PHILO',
+                'mots_cles' => [
+                    'philosophie',
+                    'pensée',
+                    'ethique',
+                    'morale',
+                    'logique',
+                    'raisonnement',
+                    'existence',
+                    'liberté',
+                    'justice',
+                    'vérité',
+                    'conscience',
+                    'inconscient',
+                    'raison',
+                    'bonheur',
+                    'société',
+                    'droit',
+                    'devoir',
+                    'politique',
+                    'langage',
+                    'art',
+                    'travail',
+                    'science',
+                    'religion',
+                    'nature humaine',
+                    'sujet de dissertation',
+                    'argument',
+                    'exemple',
+                    'analyse philosophique'
+                ]
+            ],
             ['nom' => 'Éducation Civique et Morale', 'code' => 'ECM', 'mots_cles' => ['éducation civique', 'morale', 'citoyenneté', 'droits', 'devoirs', 'lois']],
             ['nom' => 'Technologie', 'code' => 'TECH', 'mots_cles' => ['technologie', 'informatique', 'machines', 'ingénierie', 'innovation', 'robotique']],
             ['nom' => 'Informatique', 'code' => 'INFO', 'mots_cles' => ['informatique', 'programmation', 'algorithmique', 'ordinateur', 'logiciel', 'hardware']],
@@ -34,14 +312,33 @@ class EducationSeeder extends Seeder
             ['nom' => 'Littérature', 'code' => 'LITT', 'mots_cles' => ['littérature', 'œuvres', 'auteurs', 'lecture', 'analyse']],
         ];
 
+        $subjectMap = [];
         foreach ($subjects as $subjectData) {
-            Subject::create([
+            $subject = Subject::create([
                 'nom' => $subjectData['nom'],
                 'code' => $subjectData['code'],
                 'mots_cles' => $subjectData['mots_cles'],
             ]);
+            $subjectMap[$subject->code] = $subject->_id;
         }
 
+        // Liste des matières générales valables pour tout le monde
+        $commonSubjects = [
+            'FR',
+            'MATH',
+            'PC',
+            'SVT',
+            'HG',
+            'ANG',
+            'ECM',
+            'EPS'
+        ];
+
+        // Ajout progressif de la philosophie au lycée
+        $lyceeGeneralSubjects = array_merge($commonSubjects, ['PHILO']);
+
+        // Création des classes et attribution de matières
+        $classeMap = [];
         // Création des classes avec mots clés étendus
         $classes = [
             ['nom' => 'CP1', 'mots_cles' => ['cp1', 'cours préparatoire', 'primaire', 'début école']],
@@ -60,30 +357,85 @@ class EducationSeeder extends Seeder
         ];
 
         foreach ($classes as $classeData) {
-            Classe::create([
+            $subjectsForClasse = match ($classeData['nom']) {
+                'CP1', 'CP2', 'CE1', 'CE2', 'CM1', 'CM2' => ['FR', 'MATH', 'HG', 'EPS'],
+                '6e', '5e', '4e', '3e' => $commonSubjects,
+                'Seconde' => $commonSubjects, // La série commence ici mais les matières restent communes
+                'Première', 'Terminale' => $lyceeGeneralSubjects,
+                default => $commonSubjects
+            };
+
+            $subjectIds = array_values(array_intersect_key($subjectMap, array_flip($subjectsForClasse)));
+
+            $classe = Classe::create([
                 'nom' => $classeData['nom'],
                 'niveau' => $classeData['nom'],
-                'subject_ids' => [], // À remplir selon les matières associées
+                'subject_ids' => $subjectIds,
                 'mots_cles' => $classeData['mots_cles'],
             ]);
+
+            $classeMap[$classe->nom] = $classe->_id;
         }
 
         // Création des séries avec mots clés étendus
         $series = [
-            ['titre' => 'D', 'description' => 'Série scientifique D', 'mots_cles' => ['d', 'scientifique', 'maths', 'physique', 'chimie', 'svt']],
-            ['titre' => 'C', 'description' => 'Série scientifique C', 'mots_cles' => ['c', 'scientifique', 'maths', 'physique', 'chimie']],
-            ['titre' => 'A4', 'description' => 'Série littéraire A4', 'mots_cles' => ['a4', 'littéraire', 'français', 'philosophie', 'histoire', 'lettres']],
-            ['titre' => 'F', 'description' => 'Série technique F', 'mots_cles' => ['f', 'technique', 'informatique', 'technologie', 'gestion']],
-            ['titre' => 'G1', 'description' => 'Série technique G1', 'mots_cles' => ['g1', 'technique', 'gestion', 'comptabilité', 'économie']],
-            ['titre' => 'G2', 'description' => 'Série technique G2', 'mots_cles' => ['g2', 'technique', 'gestion', 'droit', 'économie']],
+            [
+                'titre' => 'D',
+                'description' => 'Série scientifique D',
+                'mots_cles' => ['d', 'scientifique', 'maths', 'physique', 'chimie', 'svt'],
+                'classes' => ['Première', 'Terminale'],
+                'subjects' => ['MATH', 'PC', 'SVT', 'PHILO', 'FR', 'HG', 'ANG']
+            ],
+            [
+                'titre' => 'C',
+                'description' => 'Série scientifique C',
+                'mots_cles' => ['c', 'scientifique', 'maths', 'physique', 'chimie'],
+                'classes' => ['Première', 'Terminale'],
+                'subjects' => ['MATH', 'PC', 'PHILO', 'FR', 'HG', 'ANG']
+            ],
+            [
+                'titre' => 'A4',
+                'description' => 'Série littéraire A4',
+                'mots_cles' => ['a4', 'littéraire', 'français', 'philosophie', 'histoire', 'lettres'],
+                'classes' => ['Première', 'Terminale'],
+                'subjects' => ['FR', 'PHILO', 'LITT', 'HG', 'ANG']
+            ],
+            [
+                'titre' => 'F',
+                'description' => 'Série technique F',
+                'mots_cles' => ['f', 'technique', 'technologie', 'informatique', 'gestion'],
+                'classes' => ['Première', 'Terminale'],
+                'subjects' => ['TECH', 'INFO', 'GEST', 'PHILO', 'FR', 'MATH']
+            ],
+            [
+                'titre' => 'G1',
+                'description' => 'Série technique G1',
+                'mots_cles' => ['g1', 'technique', 'gestion', 'comptabilité', 'économie'],
+                'classes' => ['Première', 'Terminale'],
+                'subjects' => ['GEST', 'COMPTA', 'SES', 'FR', 'PHILO']
+            ],
+            [
+                'titre' => 'G2',
+                'description' => 'Série technique G2',
+                'mots_cles' => ['g2', 'technique', 'droit', 'économie', 'gestion'],
+                'classes' => ['Première', 'Terminale'],
+                'subjects' => ['GEST', 'COMPTA', 'DRT', 'SES', 'FR', 'PHILO']
+            ],
         ];
 
         foreach ($series as $serieData) {
-            Serie::create([
-                'titre' => $serieData['titre'],
-                'description' => $serieData['description'],
-                'mots_cles' => $serieData['mots_cles'],
-            ]);
+            foreach ($serieData['classes'] as $classeNom) {
+                $classeId = $classeMap[$classeNom];
+                foreach ($serieData['subjects'] as $subjectCode) {
+                    Serie::create([
+                        'titre' => $serieData['titre'],
+                        'description' => $serieData['description'],
+                        'mots_cles' => $serieData['mots_cles'],
+                        'classe_id' => $classeId,
+                        'subject_id' => $subjectMap[$subjectCode]
+                    ]);
+                }
+            }
         }
     }
 }
