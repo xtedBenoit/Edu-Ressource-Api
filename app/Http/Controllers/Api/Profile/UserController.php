@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\Profile;
 
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
+use App\Models\Download;
+use App\Models\Resource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -116,7 +118,7 @@ class UserController extends Controller
 
     /**
      * Supprime l'avatar de l'utilisateur.
-     */ 
+     */
     public function deleteAvatar()
     {
         $user = auth()->user();
@@ -142,5 +144,31 @@ class UserController extends Controller
         return ApiResponse::success([
             'actions_history' => array_reverse($user->actions_history ?? []), // dernier en haut
         ]);
+    }
+
+    /**
+     * Récupère les ressources postées par l'utilisateur connecté.
+     */
+    public function getMyResources()
+    {
+        $user = auth()->user();
+        $resources = Resource::where('auteur_id', $user->id)->latest()->get();
+
+        return ApiResponse::success($resources, 'Mes ressources récupérées avec succès');
+    }
+
+    /**
+     * Mes téléchargement.
+     */
+    public function getMyDownload()
+    {
+        $user = auth()->user();
+
+        $downloads = Download::with('resource')
+            ->where('user_id', $user->_id)
+            ->orderByDesc('downloaded_at')
+            ->get();
+        return ApiResponse::success($downloads, 'Mes documents téléchargés récupérés avec succès');
+
     }
 }

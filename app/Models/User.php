@@ -86,6 +86,18 @@ class User extends Authenticatable implements JWTSubject
         'reset_token_expiry' => 'datetime',
     ];
 
+    public function downloads()
+    {
+        return $this->hasMany(Download::class);
+    }
+
+    public function downloadedResources()
+    {
+        return $this->belongsToMany(Resource::class, null, 'user_id', 'resource_id')
+            ->using(Download::class);
+    }
+
+
     protected static function booted()
     {
         static::creating(function ($user) {

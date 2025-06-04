@@ -79,11 +79,6 @@ class Resource extends Model
         return $this->belongsTo(Subject::class);
     }
 
-    public function discussion()
-    {
-        return $this->hasOne(Discussion::class);
-    }
-
     public function comments()
     {
         return $this->hasMany(Message::class);
@@ -97,5 +92,15 @@ class Resource extends Model
     public function validations()
     {
         return $this->hasMany(ValidationLog::class);
+    }
+
+    public function downloadsLogs()
+    {
+        return $this->hasMany(Download::class);
+    }
+
+    public function getLikesCountAttribute()
+    {
+        return $this->likes()->count();
     }
 }

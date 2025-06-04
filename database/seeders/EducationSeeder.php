@@ -269,9 +269,7 @@ class EducationSeeder extends Seeder
                 'nom' => 'Philosophie',
                 'code' => 'PHILO',
                 'mots_cles' => [
-                    'philosophie',
-                    'pensée',
-                    'ethique',
+                    'philosophie','pensée','ethique',
                     'morale',
                     'logique',
                     'raisonnement',

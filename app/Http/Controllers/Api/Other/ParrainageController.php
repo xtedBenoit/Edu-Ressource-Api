@@ -1,7 +1,7 @@
 <?php
 // app/Http/Controllers/QuotaController.php
 
-namespace App\Http\Controllers\Other;
+namespace App\Http\Controllers\Api\Other;
 
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;

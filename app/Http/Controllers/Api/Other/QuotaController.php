@@ -1,7 +1,6 @@
 <?php
-// app/Http/Controllers/QuotaController.php
 
-namespace App\Http\Controllers\Other;
+namespace App\Http\Controllers\Api\Other;
 
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
@@ -16,7 +15,7 @@ class QuotaController extends Controller
     public function showQuota()
     {
         $user = Auth::user();
-        $user->resetDownloadQuotaIfNeeded();
+        //$user->resetDownloadQuotaIfNeeded();
 
         return ApiResponse::success([
             'downloads_remaining' => $user->downloads_remaining,

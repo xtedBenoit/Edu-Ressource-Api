@@ -7,6 +7,7 @@ use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Resource\StoreRessourceRequest;
 use App\Models\Classe;
+use App\Models\Download;
 use App\Models\Resource;
 use App\Models\Serie;
 use App\Models\Subject;
@@ -23,10 +24,14 @@ use Smalot\PdfParser\Parser;
 class ResourceController extends Controller
 {
     /**
-     * Afficher toutes les ressources validées avec filtres.
-     */
-    /**
-     * Afficher toutes les ressources validées avec filtres et pagination.
+     * Affiche la liste des ressources disponibles.
+     *
+     * @queryParam classe_id int ID de la classe. Exemple : 1
+     * @queryParam subject_id int ID de la matière. Exemple : 2
+     * @queryParam serie_id int ID de la série. Exemple : 3
+     * @queryParam type_resource string Type de ressource (ex: "pdf", "video"). Exemple : pdf
+     * @queryParam mots_cles string Liste de mots-clés séparés par des virgules. Exemple : math,physique
+     * @queryParam per_page int Nombre de résultats par page. Exemple : 10
      */
     public function index(Request $request)
     {
@@ -42,6 +47,10 @@ class ResourceController extends Controller
 
         if ($request->filled('serie_id')) {
             $query->where('serie_id', $request->serie_id);
+        }
+
+        if ($request->filled('type_resource')) {
+            $query->where('type_resource', $request->type_resource);
         }
 
         if ($request->filled('mots_cles')) {
@@ -63,6 +72,7 @@ class ResourceController extends Controller
         ]);
     }
 
+
     /**
      * Ajouter une nouvelle ressource.
      */
@@ -70,38 +80,47 @@ class ResourceController extends Controller
     {
         $fichier = $request->file('fichier');
 
+        if (!$fichier->isValid()) {
+            return ApiResponse::error('Fichier non valide.', 400);
+        }
+
         // Hash du fichier pour vérification des doublons (AVANT stockage)
         $fichierHash = md5_file($fichier->getRealPath());
         if (Resource::where('fichier_hash', $fichierHash)->exists()) {
             return ApiResponse::error('Ce fichier a déjà été publié.', 409);
         }
 
-        // Construction du nom de fichier : titre_date.extension
-        $dateSuffix = Carbon::now()->format('Ymd_His');
-        $extension = $fichier->getClientOriginalExtension();
-        $nomFichierOriginal = pathinfo($fichier->getClientOriginalName(), PATHINFO_FILENAME);
-        $nomFichierNettoye = Str::slug($nomFichierOriginal);
-        $nomFichierFinal = $nomFichierNettoye . '_' . $dateSuffix . '.' . $extension;
-
-        // Sauvegarde du fichier dans "storage/app/public/ressources"
-        $cheminFichier = $fichier->storeAs('ressources', $nomFichierFinal, 'public');
-        if (!$cheminFichier) {
-            return ApiResponse::error('Échec de l\'enregistrement du fichier.', 500);
-        }
-
-        // Analyse du fichier (via service)
+        // Analyse du fichier via service AVANT stockage
         $validator = new ResourceValidatorService();
         $classe = Classe::find($request->classe_id);
         $subject = Subject::find($request->subject_id);
         $serie = Serie::find($request->serie_id);
+        $extension = $fichier->getClientOriginalExtension();
 
         $analyse = $validator->analyser(
-            storage_path('app/public/' . $cheminFichier),
+            $fichier->getRealPath(), // On utilise le fichier temporaire
             $extension,
             $classe,
             $subject,
             $serie
         );
+
+        // Si l’analyse échoue (par exemple mauvaise structure), tu peux bloquer ici :
+        if (!$analyse['valide']) {
+            return ApiResponse::error("Ressource invalide : " . $analyse['commentaire'], 422);
+        }
+
+        // Construction du nom de fichier final
+        $dateSuffix = Carbon::now()->format('Ymd_His');
+        $nomFichierOriginal = pathinfo($fichier->getClientOriginalName(), PATHINFO_FILENAME);
+        $nomFichierNettoye = Str::slug($nomFichierOriginal);
+        $nomFichierFinal = $nomFichierNettoye . '_' . $dateSuffix . '.' . $extension;
+
+        // Sauvegarde du fichier (après validation)
+        $cheminFichier = $fichier->storeAs('ressources', $nomFichierFinal, 'public');
+        if (!$cheminFichier) {
+            return ApiResponse::error('Échec de l\'enregistrement du fichier.', 500);
+        }
 
         // Création de la ressource
         $ressource = Resource::create([
@@ -124,13 +143,11 @@ class ResourceController extends Controller
         auth()->user()->addDownloadBonus(3); // Bonus de 3 téléchargements
 
         return ApiResponse::success(
-            $ressource,
-            $analyse['valide']
-                ? 'Ressource validée automatiquement 🎉 - Type: ' . ResourceType::from($analyse['type_ressource'])->label()
-                : 'Ressource en attente de validation humaine 🔎 - Type: ' . ResourceType::from($analyse['type_ressource'])->label(),
+            $ressource, $analyse['commentaire'],
             201
         );
     }
+
 
 
     /**
@@ -163,16 +180,33 @@ class ResourceController extends Controller
             return ApiResponse::error('Ressource non validée.', null, 403);
         }
 
-        // Réinitialisation du quota si besoin
+        // Vérifie si l'utilisateur a déjà téléchargé cette ressource
+        $dejaTelechargee = Download::where('user_id', $user->id)
+            ->where('resource_id', $ressource->id)
+            ->exists();
+
+        if ($dejaTelechargee) {
+            return ApiResponse::error('Vous avez déjà téléchargé cette ressource.', 409);
+        }
+
+        // Réinitialise le quota si besoin
         $user->resetDownloadQuotaIfNeeded();
 
         if ($user->downloads_remaining <= 0) {
-            return ApiResponse::error("Quota atteint. Ajoute une ressource pour débloquer plus !", 403);
+            return ApiResponse::error("Quota atteint. Ajoutez une ressource pour débloquer plus !", 403);
         }
 
         $user->decrementDownloadQuota();
         $ressource->increment('downloads');
 
+        // Enregistre le téléchargement
+        Download::create([
+            'user_id' => $user->id,
+            'resource_id' => $ressource->id,
+            'downloaded_at' => now(),
+        ]);
+
+        // Redirection ou téléchargement
         if (Str::startsWith($ressource->chemin_fichier, 'http')) {
             return redirect($ressource->chemin_fichier);
         }

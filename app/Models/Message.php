@@ -35,19 +35,4 @@ class Message extends Model
         return $user->_id === $this->user_id || $user->role === 'admin';
     }
 
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::deleting(function ($message) {
-            // Supprimer les fichiers joints si présents
-            if (!empty($message->fichiers_joints)) {
-                foreach ($message->fichiers_joints as $fichier) {
-                    if (isset($fichier['chemin'])) {
-                        Storage::delete($fichier['chemin']);
-                    }
-                }
-            }
-        });
-    }
 }
