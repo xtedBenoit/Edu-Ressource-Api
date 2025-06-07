@@ -7,7 +7,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Mail\ResetCodeMail;
+use App\Models\EmailVerification;
 use App\Models\User;
+use App\Traits\GeneratesUsername;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -18,15 +20,24 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
+    use GeneratesUsername;
     /**
      * Enregistrement d'un nouvel utilisateur
      */
     public function register(RegisterRequest $request)
     {
+        $verification = EmailVerification::where('email', $request->email)->first();
+
+        if (!$verification || !$verification->is_verified) {
+            return ApiResponse::error('L\'email n\'a pas été vérifié.', 403);
+        }
+
+        $username = $this->generateUniqueUsername($request->email);
         $user = User::create([
-            'name'                 => $request->name,
-            'username'             => $request->username,
+            'firstname'            => $request->firstname,
+            'lastname'             => $request->lastname,
             'email'                => $request->email,
+            'username'             => $username,
             'password'             => Hash::make($request->password),
             'role'                 => $request->role,
             'refresh_token'        => Str::random(64),
@@ -43,6 +54,7 @@ class AuthController extends Controller
             'user'          => $user
         ], 'Utilisateur enregistré avec succès');
     }
+
 
     /**
      * Connexion de l'utilisateur
@@ -133,11 +145,10 @@ class AuthController extends Controller
 
         Mail::to($user->email)->send(new ResetCodeMail($code, $user));
 
-       return ApiResponse::success(null, 'Code de réinitialisation envoyé par email');
-
+        return ApiResponse::success(null, 'Code de réinitialisation envoyé par email');
     }
 
-     /**
+    /**
      * Réinitialisation du mot de passe
      */
     public function resetPassword(Request $request)
@@ -148,9 +159,10 @@ class AuthController extends Controller
             'password' => 'required|string|min:8|confirmed',
         ]);
 
+        $code = (int) $request->code;
         $user = User::where('email', $request->email)
-                    ->where('reset_token', $request->code)
-                    ->first();
+            ->where('reset_token', $code)
+            ->first();
 
         if (!$user) {
             return ApiResponse::error('Code de réinitialisation invalide', null, 400);
@@ -166,13 +178,5 @@ class AuthController extends Controller
         $user->save();
 
         return ApiResponse::success(null, 'Mot de passe réinitialisé avec succès.');
-    }
-
-    /**
-     * Récupérer les infos de l'utilisateur connecté
-     */
-    public function me()
-    {
-        return ApiResponse::success(auth()->user());
     }
 }

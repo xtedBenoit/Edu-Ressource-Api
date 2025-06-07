@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\Ecole\ClasseController;
 use App\Http\Controllers\Api\Ecole\SerieController;
 use App\Http\Controllers\Api\Ecole\SubjectController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Api\Other\QuotaController;
 use App\Http\Controllers\Api\Profile\UserController;
 use App\Http\Controllers\Api\Resource\ResourceController;
 use Illuminate\Support\Facades\Route;
+
 
 
 
@@ -32,10 +34,14 @@ Route::prefix('v1')->group(function () {
 
     // Authentification
     Route::prefix('auth')->group(function () {
+        Route::post('email/send-code', [EmailVerificationController::class, 'sendCode']);
+        Route::post('email/verify-code', [EmailVerificationController::class, 'verifyCode']);
         Route::post('register', [AuthController::class, 'register']);
         Route::post('login', [AuthController::class, 'login']);
         Route::post('forgot-password', [AuthController::class, 'sendResetCode']);
         Route::post('reset-password', [AuthController::class, 'resetPassword']);
+        Route::post('refresh', [AuthController::class, 'refresh']);
+
     });
 
     // Ressources publiques
@@ -63,8 +69,6 @@ Route::prefix('v1')->group(function () {
         // Auth utilisateur connecté
         Route::prefix('auth')->group(function () {
             Route::post('logout', [AuthController::class, 'logout']);
-            Route::post('refresh', [AuthController::class, 'refresh']);
-            Route::get('me', [AuthController::class, 'me']);
         });
 
         // Gestion des infos utilisateur - préfixe 'me'

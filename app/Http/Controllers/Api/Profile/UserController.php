@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Profile;
 
 use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\User\UpdateAvatarRequest;
 use App\Models\Download;
 use App\Models\Resource;
 use App\Models\User;
@@ -29,7 +30,8 @@ class UserController extends Controller
         $user = auth()->user();
 
         $validated = $request->validate([
-            'name' => 'nullable|string',
+            'firstname' => ['nullable', 'string', 'max:255'],
+            'lastname'  => ['nullable', 'string', 'max:255'],
             'username' => 'nullable|string|unique:users,username,' . $user->_id,
             'bio' => 'nullable|string',
         ]);
@@ -87,24 +89,23 @@ class UserController extends Controller
     /**
      * Mettre à jour ou ajouter une photo de profil pour l'utilisateur connecté.
      */
-    public function uploadAvatar(Request $request)
+    public function uploadAvatar(UpdateAvatarRequest $request)
     {
         $user = auth()->user();
+        if (!$user) {
+            return ApiResponse::error('Utilisateur non authentifié.', null, 401);
+        }
 
-        // Validation conditionnelle
-        $request->validate([
-            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
-            'avatar_url' => 'nullable|url',
-        ]);
+        $data = $request->validated();
 
         if ($request->hasFile('avatar')) {
-            // Traitement upload fichier
             $filename = uniqid() . '.' . $request->avatar->extension();
             $path = $request->avatar->storeAs('images/avatars', $filename, 'public');
             $user->profile_image = '/storage/' . $path;
+
         } elseif ($request->filled('avatar_url')) {
-            // Utiliser l'URL
             $user->profile_image = $request->avatar_url;
+
         } else {
             return ApiResponse::error('Veuillez fournir un fichier avatar ou une URL valide.', null, 422);
         }
@@ -112,9 +113,10 @@ class UserController extends Controller
         $user->save();
 
         return ApiResponse::success([
-            'profile_image' => $user->profile_image
+            'profile_image' => $user->profile_image,
         ], 'Image de profil mise à jour avec succès.');
     }
+
 
     /**
      * Supprime l'avatar de l'utilisateur.
@@ -169,6 +171,5 @@ class UserController extends Controller
             ->orderByDesc('downloaded_at')
             ->get();
         return ApiResponse::success($downloads, 'Mes documents téléchargés récupérés avec succès');
-
     }
 }
