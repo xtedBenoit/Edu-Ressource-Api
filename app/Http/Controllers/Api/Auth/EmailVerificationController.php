@@ -18,7 +18,7 @@ class EmailVerificationController extends Controller
     public function sendCode(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email' => ['required', 'email'],
         ]);
 
         if (User::where('email', $request->email)->exists()) {
@@ -45,8 +45,8 @@ class EmailVerificationController extends Controller
     public function verifyCode(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
-            'code'  => 'required|digits:6',
+            'email' => ['required', 'email'],
+            'code'  => ['required', 'digits:6'],
         ]);
 
         $verification = EmailVerification::where('email', $request->email)

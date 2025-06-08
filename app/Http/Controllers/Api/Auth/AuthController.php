@@ -39,10 +39,12 @@ class AuthController extends Controller
             'email'                => $request->email,
             'username'             => $username,
             'password'             => Hash::make($request->password),
-            'role'                 => $request->role,
+            'role'                 => auth()->user() && auth()->user()->role == 'admin' ? $request->role : 'user',
             'refresh_token'        => Str::random(64),
             'refresh_token_expiry' => now()->addDays(7),
         ]);
+
+        $verification->delete(); // Supprimer la vérification après l'enregistrement
 
         $token = JWTAuth::fromUser($user);
 
