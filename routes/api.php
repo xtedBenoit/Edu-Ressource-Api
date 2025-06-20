@@ -13,24 +13,7 @@ use App\Http\Controllers\Api\Profile\UserController;
 use App\Http\Controllers\Api\Resource\ResourceController;
 use Illuminate\Support\Facades\Route;
 
-
-
-
-
-
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
-*/
 Route::prefix('v1')->group(function () {
-
-    // 🔓 Routes publiques
 
     // Authentification
     Route::prefix('auth')->group(function () {
@@ -41,29 +24,25 @@ Route::prefix('v1')->group(function () {
         Route::post('forgot-password', [AuthController::class, 'sendResetCode']);
         Route::post('reset-password', [AuthController::class, 'resetPassword']);
         Route::post('refresh', [AuthController::class, 'refresh']);
-
     });
 
     // Ressources publiques
     Route::prefix('ressources')->group(function () {
         Route::get('/', [ResourceController::class, 'index']);
         Route::get('{id}', [ResourceController::class, 'show']);
-
-        // Messages accessibles en lecture publique
         Route::get('{id}/messages', [MessageController::class, 'index']);
     });
 
     // Métadonnées publiques (matières, séries, classes)
     Route::apiResources([
         'subjects' => SubjectController::class,
-        'series'   => SerieController::class,
-        'classes'  => ClasseController::class,
+        'series' => SerieController::class,
+        'classes' => ClasseController::class,
     ], ['only' => ['index', 'show']]);
 
-    // Compteur de likes (public)
     Route::get('likes/count/{resourceId}', [LikeController::class, 'count']);
 
-    // 🔐 Routes protégées - authentification requise
+    // Routes protégées - authentification requise
     Route::middleware('auth:api')->group(function () {
 
         // Auth utilisateur connecté

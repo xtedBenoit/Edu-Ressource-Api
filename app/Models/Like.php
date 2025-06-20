@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MongoDB\Laravel\Eloquent\Model;
+use MongoDB\Laravel\Relations\BelongsTo;
 
 class Like extends Model
 {
@@ -15,13 +15,12 @@ class Like extends Model
         'auteur_id',
     ];
 
-
-    public function resource()
+    public function resource(): BelongsTo
     {
         return $this->belongsTo(Resource::class);
     }
 
-    public function auteur()
+    public function auteur(): BelongsTo
     {
         return $this->belongsTo(User::class, 'auteur_id');
     }

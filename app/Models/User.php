@@ -2,38 +2,20 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
-use Laravel\Sanctum\HasApiTokens;
 use MongoDB\Laravel\Auth\User as Authenticatable;
+use MongoDB\Laravel\Relations\BelongsToMany;
+use MongoDB\Laravel\Relations\HasMany;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
 {
     use Notifiable;
 
+    public string $_id;
     protected $connection = 'mongodb';
-
     protected $table = 'users';
-
-    /**
-     * Retourne l'identifiant JWT
-     */
-    public function getJWTIdentifier()
-    {
-        return $this->getKey();
-    }
-
-    /**
-     * Retourne les claims personnalisés du JWT
-     */
-    public function getJWTCustomClaims(): array
-    {
-        return [];
-    }
-
     /**
      * The attributes that are mass assignable.
      *
@@ -54,7 +36,6 @@ class User extends Authenticatable implements JWTSubject
         'downloads_remaining',
         'downloads_reset_at',
     ];
-
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -71,7 +52,6 @@ class User extends Authenticatable implements JWTSubject
         'parrain_utilise',
         'actions_history',
     ];
-
     /**
      * The attributes that should be cast.
      *
@@ -86,25 +66,45 @@ class User extends Authenticatable implements JWTSubject
         'reset_token_expiry' => 'datetime',
     ];
 
-    public function downloads()
-    {
-        return $this->hasMany(Download::class);
-    }
+    private int $downloads_remaining;
+    private mixed $downloads_reset_at;
+    private mixed $reset_token;
+    private mixed $reset_token_expiry;
 
-    public function downloadedResources()
-    {
-        return $this->belongsToMany(Resource::class, null, 'user_id', 'resource_id')
-            ->using(Download::class);
-    }
-
-
-    protected static function booted()
+    protected static function booted(): void
     {
         static::creating(function ($user) {
             if (empty($user->parrain_code)) {
                 $user->parrain_code = strtoupper(Str::random(8));
             }
         });
+    }
+
+    /**
+     * Retourne l'identifiant JWT
+     */
+    public function getJWTIdentifier(): mixed
+    {
+        return $this->getKey();
+    }
+
+    /**
+     * Retourne les claims personnalisés du JWT
+     */
+    public function getJWTCustomClaims(): array
+    {
+        return [];
+    }
+
+    public function downloads(): HasMany
+    {
+        return $this->hasMany(Download::class);
+    }
+
+    public function downloadedResources(): BelongsToMany
+    {
+        return $this->belongsToMany(Resource::class, null, 'user_id', 'resource_id')
+            ->using(Download::class);
     }
 
     /**
@@ -141,29 +141,15 @@ class User extends Authenticatable implements JWTSubject
     /**
      * Réinitialise les quotas mensuels si nécessaire.
      */
-    public function resetDownloadQuotaIfNeeded()
+    public function resetDownloadQuotaIfNeeded(): void
     {
         $now = now();
-
         if (is_null($this->downloads_reset_at) || $this->downloads_reset_at->lt($now->startOfMonth())) {
             $this->downloads_remaining = 5;
             $this->downloads_reset_at = $now;
             $this->save();
-
             $this->logAction('reset', 'Quota mensuel réinitialisé à 5');
         }
-    }
-
-    public function decrementDownloadQuota()
-    {
-        $this->downloads_remaining = max(0, $this->downloads_remaining - 1);
-        $this->save();
-    }
-
-    public function addDownloadBonus(int $amount)
-    {
-        $this->downloads_remaining += $amount;
-        $this->save();
     }
 
     /**
@@ -177,5 +163,17 @@ class User extends Authenticatable implements JWTSubject
             'points' => $points,
             'timestamp' => now(),
         ]);
+    }
+
+    public function decrementDownloadQuota(): void
+    {
+        $this->downloads_remaining = max(0, $this->downloads_remaining - 1);
+        $this->save();
+    }
+
+    public function addDownloadBonus(int $amount): void
+    {
+        $this->downloads_remaining += $amount;
+        $this->save();
     }
 }

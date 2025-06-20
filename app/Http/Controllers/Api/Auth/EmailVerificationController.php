@@ -7,20 +7,20 @@ use App\Helpers\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Models\EmailVerification;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
 class EmailVerificationController extends Controller
 {
     /**
-     * Création de compte.
+     * Envoie un code de vérification à l'adresse email fournie.
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function sendCode(Request $request)
+    public function sendCode(Request $request): JsonResponse
     {
-        $request->validate([
-            'email' => ['required', 'email'],
-        ]);
-
+        $request->validate(['email' => ['required', 'email']]);
         if (User::where('email', $request->email)->exists()) {
             return ApiResponse::error("Cette adresse email est déjà utilisée.", 409);
         }
@@ -31,22 +31,22 @@ class EmailVerificationController extends Controller
             'code' => $code,
             'firstname' => 'utilisateur',
         ], function ($message) use ($request) {
-            $message->to($request->email)
-                ->subject('Vérification de votre adresse email');
+            $message->to($request->email)->subject('Vérification de votre adresse email');
         });
 
         return ApiResponse::success(null, 'Code de vérification envoyé à l\'adresse email.');
     }
 
-
     /**
      * Vérifie le code de vérification fourni par l'utilisateur.
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function verifyCode(Request $request)
+    public function verifyCode(Request $request): JsonResponse
     {
         $request->validate([
             'email' => ['required', 'email'],
-            'code'  => ['required', 'digits:6'],
+            'code' => ['required', 'digits:6'],
         ]);
 
         $verification = EmailVerification::where('email', $request->email)
@@ -55,13 +55,9 @@ class EmailVerificationController extends Controller
 
         if (!$verification) {
             return ApiResponse::error('Code invalide', 422);
-        }
-
-        if ($verification->is_verified) {
+        } elseif ($verification->is_verified) {
             return ApiResponse::error('Email déjà vérifié.', 400);
-        }
-
-        if (now()->greaterThan($verification->expires_at)) {
+        } elseif (now()->greaterThan($verification->expires_at)) {
             return ApiResponse::error('Code expiré.', 400);
         }
 

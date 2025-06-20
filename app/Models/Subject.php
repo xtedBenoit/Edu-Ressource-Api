@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MongoDB\Laravel\Eloquent\Model;
+use MongoDB\Laravel\Relations\HasMany;
 
 class Subject extends Model
 {
@@ -21,18 +21,19 @@ class Subject extends Model
     protected $casts = [
         'mots_cles' => 'array'
     ];
+    private mixed $mots_cles;
 
-    public function resources()
+    public function resources(): HasMany
     {
         return $this->hasMany(Resource::class);
     }
 
-    public function series()
+    public function series(): HasMany
     {
         return $this->hasMany(Serie::class);
     }
 
-    public function classes()
+    public function classes(): HasMany
     {
         return $this->hasMany(Classe::class, 'subject_ids', '_id');
     }
@@ -40,7 +41,7 @@ class Subject extends Model
     public function getMotsClesArrayAttribute(): array
     {
         return is_array($this->mots_cles) ? $this->mots_cles : (
-            is_string($this->mots_cles) ? json_decode($this->mots_cles, true) ?? [] : []
+        is_string($this->mots_cles) ? json_decode($this->mots_cles, true) ?? [] : []
         );
     }
 }

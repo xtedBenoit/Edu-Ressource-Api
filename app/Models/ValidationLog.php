@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MongoDB\Laravel\Eloquent\Model;
+use MongoDB\Laravel\Relations\BelongsTo;
 
 class ValidationLog extends Model
 {
@@ -25,16 +25,8 @@ class ValidationLog extends Model
         'score_confiance' => 'float',
         'mots_cles' => 'array'
     ];
-
-    public function resource()
-    {
-        return $this->belongsTo(Resource::class);
-    }
-
-    public function validateur()
-    {
-        return $this->belongsTo(User::class, 'validateur_id');
-    }
+    private mixed $type_validation;
+    private mixed $validateur;
 
     public static function createAutoValidation($resourceId, $status, $score, $keywords = [])
     {
@@ -58,12 +50,21 @@ class ValidationLog extends Model
         ]);
     }
 
-    public function getValidateurName()
+    public function resource(): BelongsTo
+    {
+        return $this->belongsTo(Resource::class);
+    }
+
+    public function validateur(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'validateur_id');
+    }
+
+    public function getValidateurName(): string
     {
         if ($this->type_validation === 'auto') {
             return 'Système';
         }
-
         return $this->validateur ? $this->validateur->name : 'Inconnu';
     }
 }

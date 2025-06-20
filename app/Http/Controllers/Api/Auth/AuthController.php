@@ -10,10 +10,10 @@ use App\Mail\ResetCodeMail;
 use App\Models\EmailVerification;
 use App\Models\User;
 use App\Traits\GeneratesUsername;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -21,26 +21,29 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 class AuthController extends Controller
 {
     use GeneratesUsername;
+
     /**
      * Enregistrement d'un nouvel utilisateur
+     * @param RegisterRequest $request
+     * @return JsonResponse
      */
-    public function register(RegisterRequest $request)
+    public function register(RegisterRequest $request): JsonResponse
     {
         $verification = EmailVerification::where('email', $request->email)->first();
-
         if (!$verification || !$verification->is_verified) {
-            return ApiResponse::error('L\'email n\'a pas été vérifié.', 403);
+            return ApiResponse::error("L'email n'a pas été vérifié.", 403);
         }
 
         $username = $this->generateUniqueUsername($request->email);
+
         $user = User::create([
-            'firstname'            => $request->firstname,
-            'lastname'             => $request->lastname,
-            'email'                => $request->email,
-            'username'             => $username,
-            'password'             => Hash::make($request->password),
-            'role'                 => auth()->user() && auth()->user()->role == 'admin' ? $request->role : 'user',
-            'refresh_token'        => Str::random(64),
+            'firstname' => $request->firstname,
+            'lastname' => $request->lastname,
+            'email' => $request->email,
+            'username' => $username,
+            'password' => Hash::make($request->password),
+            'role' => auth()->user() && auth()->user()->role == 'admin' ? $request->role : 'user',
+            'refresh_token' => Str::random(64),
             'refresh_token_expiry' => now()->addDays(7),
         ]);
 
@@ -49,19 +52,20 @@ class AuthController extends Controller
         $token = JWTAuth::fromUser($user);
 
         return ApiResponse::success([
-            'access_token'  => $token,
+            'access_token' => $token,
             'refresh_token' => $user->refresh_token,
-            'token_type'    => 'bearer',
-            'expires_in'    => auth('api')->factory()->getTTL() * 60,
-            'user'          => $user
+            'token_type' => 'bearer',
+            'expires_in' => auth('api')->factory()->getTTL() * 60,
+            'user' => $user
         ], 'Utilisateur enregistré avec succès');
     }
 
-
     /**
-     * Connexion de l'utilisateur
+     * Connexion d'un utilisateur
+     * @param LoginRequest $request
+     * @return JsonResponse
      */
-    public function login(LoginRequest $request)
+    public function login(LoginRequest $request): JsonResponse
     {
         $credentials = $request->only('email', 'password');
 
@@ -87,11 +91,12 @@ class AuthController extends Controller
         ], 'Connexion réussie');
     }
 
-
     /**
-     * Rafraîchir le token
+     * Rafraîchissement du token JWT
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function refresh(Request $request)
+    public function refresh(Request $request): JsonResponse
     {
         $refreshToken = $request->input('refresh_token');
         $user = User::where('refresh_token', $refreshToken)->first();
@@ -102,7 +107,6 @@ class AuthController extends Controller
 
         $newToken = JWTAuth::fromUser($user);
 
-        // Nouveau refresh token
         $user->refresh_token = Str::random(64);
         $user->refresh_token_expiry = now()->addDays(7);
         $user->save();
@@ -116,9 +120,10 @@ class AuthController extends Controller
     }
 
     /**
-     * Déconnexion (invalider le token actuel)
+     * Déconnexion de l'utilisateur
+     * @return JsonResponse
      */
-    public function logout()
+    public function logout(): JsonResponse
     {
         try {
             JWTAuth::invalidate(JWTAuth::getToken());
@@ -130,17 +135,18 @@ class AuthController extends Controller
 
     /**
      * Envoi du code de réinitialisation de mot de passe
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function sendResetCode(Request $request)
+    public function sendResetCode(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email',
+            'email' => ['required', 'email', 'exists:users,email'],
         ]);
 
+        $code = rand(100000, 999999);
+
         $user = User::where('email', $request->email)->first();
-
-        $code = rand(100000, 999999); // Code à 6 chiffres
-
         $user->reset_token = $code;
         $user->reset_token_expiry = now()->addMinutes(15);
         $user->save();
@@ -152,25 +158,26 @@ class AuthController extends Controller
 
     /**
      * Réinitialisation du mot de passe
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function resetPassword(Request $request)
+    public function resetPassword(Request $request): JsonResponse
     {
         $request->validate([
-            'email' => 'required|email|exists:users,email',
-            'code' => 'required|string|size:6',
-            'password' => 'required|string|min:8|confirmed',
+            'email' => ['required', 'email', 'exists:users,email'],
+            'code' => ['required', 'integer', 'digits:6'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        $code = (int) $request->code;
+        $code = (int)$request->code;
+
         $user = User::where('email', $request->email)
             ->where('reset_token', $code)
             ->first();
 
         if (!$user) {
             return ApiResponse::error('Code de réinitialisation invalide', null, 400);
-        }
-
-        if (!$user->reset_token_expiry || now()->greaterThan($user->reset_token_expiry)) {
+        } elseif (!$user->reset_token_expiry || now()->greaterThan($user->reset_token_expiry)) {
             return ApiResponse::error('Code expiré. Veuillez demander un nouveau code.', null, 400);
         }
 

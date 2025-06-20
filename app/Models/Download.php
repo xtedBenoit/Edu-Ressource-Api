@@ -4,11 +4,12 @@
 namespace App\Models;
 
 use MongoDB\Laravel\Eloquent\Model;
+use MongoDB\Laravel\Relations\BelongsTo;
 
 class Download extends Model
 {
-    protected $connection = 'mongodb';
 
+    protected $connection = 'mongodb';
     protected $table = 'downloads';
 
     protected $fillable = [
@@ -21,12 +22,12 @@ class Download extends Model
         'downloaded_at' => 'datetime'
     ];
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function resource()
+    public function resource(): BelongsTo
     {
         return $this->belongsTo(Resource::class);
     }
