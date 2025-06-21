@@ -118,6 +118,8 @@ class ResourceController extends Controller
 
         // Sauvegarde du fichier (après validation)
         $cheminFichier = $fichier->storeAs('ressources', $nomFichierFinal, 'public');
+        $urlFichier = asset('storage/' . $cheminFichier);
+
         if (!$cheminFichier) {
             return ApiResponse::error('Échec de l\'enregistrement du fichier.', 500);
         }
@@ -128,7 +130,7 @@ class ResourceController extends Controller
             'description' => $request->description,
             'type' => $request->type_fichier,
             'type_ressource' => $analyse['type_ressource'],
-            'chemin_fichier' => $cheminFichier,
+            'chemin_fichier' => $urlFichier,
             'fichier_hash' => $fichierHash,
             'auteur_id' => auth()->id(),
             'classe_id' => $request->classe_id,

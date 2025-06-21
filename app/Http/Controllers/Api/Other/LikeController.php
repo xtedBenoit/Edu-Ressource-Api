@@ -91,4 +91,39 @@ class LikeController extends Controller
             return ApiResponse::error('Erreur lors de la récupération du nombre de likes.', $e->getMessage(), 500);
         }
     }
+
+    /**
+     * Vérifier si l'utilisateur connecté a liké une ressource
+     */
+    public function check($resourceId)
+    {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return ApiResponse::error('Utilisateur non connecté.', null, 401);
+            }
+
+            // Convertir en ObjectId si nécessaire
+            try {
+                $resourceObjectId = new ObjectId($resourceId);
+            } catch (\Exception $e) {
+                return ApiResponse::error('ID de ressource invalide.');
+            }
+
+            // Vérifier que la ressource existe
+            $resourceExists = Resource::where('_id', $resourceObjectId)->exists();
+            if (!$resourceExists) {
+                return ApiResponse::error("La ressource spécifiée n'existe pas.", null, 404);
+            }
+
+            $hasLiked = Like::where('user_id', $user->_id)
+                ->where('resource_id', $resourceObjectId)
+                ->exists();
+
+            return ApiResponse::success(['has_liked' => $hasLiked], 'Statut de like récupéré');
+        } catch (\Exception $e) {
+            // Logue l'erreur si besoin
+            return ApiResponse::error('Erreur lors de la vérification du like.', $e->getMessage(), 500);
+        }
+    }
 }
