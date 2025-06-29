@@ -22,7 +22,18 @@ class Serie extends Model
     protected $casts = [
         'mots_cles' => 'array'
     ];
-    private mixed $mots_cles;
+
+    protected static function booted(): void
+    {
+        static::ensureIndexes();
+    }
+
+    protected static function ensureIndexes(): void
+    {
+        static::raw(function ($collection) {
+            $collection->createIndex(['mots_cles' => 'text']);
+        });
+    }
 
     public function resources(): HasMany
     {
@@ -46,8 +57,16 @@ class Serie extends Model
 
     public function getMotsClesArrayAttribute(): array
     {
-        return is_array($this->mots_cles) ? $this->mots_cles : (
-        is_string($this->mots_cles) ? json_decode($this->mots_cles, true) ?? [] : []
-        );
+        $mots = $this->attributes['mots_cles'] ?? [];
+
+        if (is_array($mots)) {
+            return $mots;
+        }
+
+        if (is_string($mots)) {
+            return json_decode($mots, true) ?? [];
+        }
+
+        return [];
     }
 }

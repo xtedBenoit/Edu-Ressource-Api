@@ -10,6 +10,8 @@ enum ResourceType: string
     case EXAMEN = 'examen';
     case CORRIGE = 'corrige';
     case VIDEO = 'video';
+    case MEMOIRE = 'memoire';
+    case PRESENTATION = 'presentation';
     case AUTRE = 'autre';
 
     public static function values(): array
@@ -26,6 +28,8 @@ enum ResourceType: string
             self::EXAMEN => 'Examen',
             self::CORRIGE => 'Corrigé',
             self::VIDEO => 'Vidéo pédagogique',
+            self::MEMOIRE => 'Mémoire ou rapport',
+            self::PRESENTATION => 'Présentation / Slide',
             self::AUTRE => 'Autre type',
         };
     }

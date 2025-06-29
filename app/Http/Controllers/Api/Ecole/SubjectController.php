@@ -32,7 +32,7 @@ class SubjectController extends Controller
      */
     public function show($id)
     {
-        $subject = Subject::with(['resources', 'series', 'classes'])->find($id);
+        $subject = Subject::find($id);
         if (!$subject) return ApiResponse::notFound();
         return ApiResponse::success($subject);
     }

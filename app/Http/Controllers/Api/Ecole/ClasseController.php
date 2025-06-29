@@ -50,7 +50,7 @@ class ClasseController extends Controller
      */
     public function show($id)
     {
-        $classe = Classe::with(['resources', 'series', 'subjects'])->find($id);
+        $classe = Classe::find($id);
         if (!$classe) return ApiResponse::notFound();
         return ApiResponse::success($classe);
     }

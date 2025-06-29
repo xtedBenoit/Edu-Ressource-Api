@@ -29,11 +29,11 @@ class SerieController extends Controller
     }
 
     /**
-     * ffiche les détails d'une série.
+     * Affiche les détails d'une série.
      */
     public function show($id)
     {
-        $serie = Serie::with(['resources', 'classe', 'subject', 'auteur'])->find($id);
+        $serie = Serie::find($id);
         if (!$serie) return ApiResponse::notFound();
         return ApiResponse::success($serie);
     }

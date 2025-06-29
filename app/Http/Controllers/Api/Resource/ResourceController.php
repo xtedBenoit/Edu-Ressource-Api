@@ -145,7 +145,8 @@ class ResourceController extends Controller
         auth()->user()->addDownloadBonus(3); // Bonus de 3 téléchargements
 
         return ApiResponse::success(
-            $ressource, $analyse['commentaire'],
+            $ressource,
+            $analyse['commentaire'],
             201
         );
     }
@@ -238,5 +239,47 @@ class ResourceController extends Controller
         $ressource->delete();
 
         return ApiResponse::success(null, 'Ressource supprimée.');
+    }
+
+
+    /**
+     * Filtrer les ressources selon divers critères.
+     */
+    public function filter(Request $request)
+    {
+        $query = Resource::query();
+
+        // Filtres simples
+        if ($request->filled('classe_id')) {
+            $query->where('classe_id', $request->classe_id);
+        }
+
+        if ($request->filled('subject_id')) {
+            $query->where('subject_id', $request->subject_id);
+        }
+
+        if ($request->filled('serie_id')) {
+            $query->where('serie_id', $request->serie_id);
+        }
+
+        if ($request->filled('type_ressource')) {
+            $query->where('type_ressource', $request->type_ressource);
+        }
+
+        // Pertinence : nombre de likes
+        $query->withCount('likes');
+
+        // Tri par défaut : pertinence d'abord (likes), ensuite date de création
+        $query->orderByDesc('likes_count')
+            ->orderByDesc('created_at');
+
+        // Pagination
+        $perPage = $request->get('per_page', 10);
+        $results = $query->paginate($perPage);
+
+        return ApiResponse::success(
+            $results,
+            "Ressources filtrées",
+        );
     }
 }

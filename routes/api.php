@@ -6,12 +6,14 @@ use App\Http\Controllers\Api\Ecole\ClasseController;
 use App\Http\Controllers\Api\Ecole\SerieController;
 use App\Http\Controllers\Api\Ecole\SubjectController;
 use App\Http\Controllers\Api\Message\MessageController;
+use App\Http\Controllers\Api\Other\KeywordController;
 use App\Http\Controllers\Api\Other\LikeController;
 use App\Http\Controllers\Api\Other\ParrainageController;
 use App\Http\Controllers\Api\Other\QuotaController;
 use App\Http\Controllers\Api\Profile\UserController;
 use App\Http\Controllers\Api\Resource\ResourceController;
 use Illuminate\Support\Facades\Route;
+
 
 Route::prefix('v1')->group(function () {
 
@@ -26,10 +28,13 @@ Route::prefix('v1')->group(function () {
         Route::post('refresh', [AuthController::class, 'refresh']);
     });
 
+    Route::get('mots-cles/suggestions', [KeywordController::class, 'suggest']);
+
     // Ressources publiques
     Route::prefix('ressources')->group(function () {
         Route::get('/', [ResourceController::class, 'index']);
         Route::get('{id}', [ResourceController::class, 'show']);
+        Route::get('/filter', [ResourceController::class, 'filter']);
         Route::get('{id}/messages', [MessageController::class, 'index']);
     });
 

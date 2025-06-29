@@ -16,7 +16,6 @@ class Resource extends Model
     protected $fillable = [
         'titre',
         'description',
-        'type',
         'chemin_fichier',
         'type_ressource',
         'auteur_id',
@@ -55,6 +54,10 @@ class Resource extends Model
                 ['fichier_hash' => 1],
                 ['unique' => true, 'sparse' => true] // sparse = ignore les documents sans ce champ
             );
+        });
+
+        static::raw(function ($collection) {
+            $collection->createIndex(['mots_cles' => 'text']);
         });
     }
 

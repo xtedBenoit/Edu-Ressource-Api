@@ -64,12 +64,8 @@ class User extends Authenticatable implements JWTSubject
         'password' => 'string',
         'refresh_token_expiry' => 'datetime',
         'reset_token_expiry' => 'datetime',
+        'downloads_remaining' => 'integer',
     ];
-
-    private int $downloads_remaining;
-    private mixed $downloads_reset_at;
-    private mixed $reset_token;
-    private mixed $reset_token_expiry;
 
     protected static function booted(): void
     {
@@ -167,13 +163,13 @@ class User extends Authenticatable implements JWTSubject
 
     public function decrementDownloadQuota(): void
     {
-        $this->downloads_remaining = max(0, $this->downloads_remaining - 1);
+        $this->downloads_remaining = max(0, ($this->downloads_remaining ?? 0) - 1);
         $this->save();
     }
 
     public function addDownloadBonus(int $amount): void
     {
-        $this->downloads_remaining += $amount;
+        $this->downloads_remaining = ($this->downloads_remaining ?? 0) + $amount;
         $this->save();
     }
 }

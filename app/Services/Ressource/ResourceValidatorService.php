@@ -71,7 +71,6 @@ class ResourceValidatorService
 
             $this->logEnd(__METHOD__, ['score' => $scoreFinal, 'valid' => $valide]);
             return $result;
-
         } catch (\Exception $e) {
             Log::error("Erreur lors de l'analyse", [
                 'error' => $e->getMessage(),
@@ -90,12 +89,12 @@ class ResourceValidatorService
         ];
 
         $resultats = [];
-        
+
         foreach ($dependances as $cmd => $package) {
             $process = new Process(['which', $cmd]);
             $process->run();
             $disponible = $process->isSuccessful();
-            
+
             $resultats[] = [
                 'commande' => $cmd,
                 'package' => $package,
@@ -156,7 +155,6 @@ class ResourceValidatorService
 
             $this->logEnd(__METHOD__, ['length' => strlen($texte)]);
             return $texte;
-
         } catch (\Exception $e) {
             Log::error("Erreur d'extraction", [
                 'error' => $e->getMessage(),
@@ -169,7 +167,7 @@ class ResourceValidatorService
     private function extraireTextePdf(string $cheminPdf): string
     {
         $cacheKey = 'pdf_text_' . $this->getFileHash($cheminPdf);
-        
+
         if (isset($this->cache[$cacheKey])) {
             Log::debug("Retour du texte depuis le cache");
             return $this->cache[$cacheKey];
@@ -186,7 +184,7 @@ class ResourceValidatorService
         foreach ($methodOrder as $method) {
             $texte = $this->$method($cheminPdf);
             $texte = $this->nettoyerTexte($texte);
-            
+
             if ($this->estTexteValide($texte)) {
                 Log::debug("Méthode réussie: $method");
                 break;
@@ -218,7 +216,8 @@ class ResourceValidatorService
             // Convertir le PDF en images
             $this->runProcessWithTimeout([
                 'pdftoppm',
-                '-r', '300',
+                '-r',
+                '300',
                 '-png',
                 $cheminPdf,
                 $prefixImage
@@ -235,7 +234,8 @@ class ResourceValidatorService
                     'tesseract',
                     $image,
                     'stdout',
-                    '-l', 'fra'
+                    '-l',
+                    'fra'
                 ]) . "\n";
                 unlink($image);
             }
@@ -256,10 +256,13 @@ class ResourceValidatorService
             // Convertir le PDF en image
             $this->runProcessWithTimeout([
                 'convert',
-                '-density', '300',
+                '-density',
+                '300',
                 $cheminPdf,
-                '-background', 'white',
-                '-alpha', 'remove',
+                '-background',
+                'white',
+                '-alpha',
+                'remove',
                 $imageTemp
             ]);
 
@@ -268,7 +271,8 @@ class ResourceValidatorService
                 'tesseract',
                 $imageTemp,
                 'stdout',
-                '-l', 'fra'
+                '-l',
+                'fra'
             ]);
 
             return trim($texte);
@@ -286,7 +290,8 @@ class ResourceValidatorService
                 'tesseract',
                 $cheminImage,
                 'stdout',
-                '-l', 'fra'
+                '-l',
+                'fra'
             ]);
         } catch (\Exception $e) {
             Log::error("Erreur OCR", ['exception' => $e->getMessage()]);
@@ -327,7 +332,7 @@ class ResourceValidatorService
     {
         $texte = Str::lower($this->nettoyerTexte($texte));
         $wordCount = str_word_count($texte);
-        
+
         if ($wordCount < 50) {
             return ResourceType::AUTRE;
         }
@@ -335,11 +340,89 @@ class ResourceValidatorService
         $scores = array_fill_keys(array_column(ResourceType::cases(), 'value'), 0);
 
         $patterns = [
-            ResourceType::EXERCICE->value => ['exercice' => 3, 'problème' => 2, 'question' => 1, 'énoncé' => 2],
-            ResourceType::CORRIGE->value => ['corrigé' => 3, 'solution' => 2, 'réponse' => 1],
-            ResourceType::EXAMEN->value => ['examen' => 3, 'contrôle' => 2, 'épreuve' => 1, 'bac' => 3, 'brevet' => 2],
-            ResourceType::FICHE->value => ['fiche' => 3, 'résumé' => 2, 'synthèse' => 1, 'mémo' => 1],
-            ResourceType::COURS->value => ['chapitre' => 3, 'leçon' => 2, 'définition' => 1, 'théorème' => 2],
+            ResourceType::COURS->value => [
+                'introduction' => 3,
+                'chapitre' => 3,
+                'leçon' => 2,
+                'notions' => 2,
+                'explication' => 2,
+                'contenu' => 1,
+                'théorie' => 2,
+                'document de cours' => 2,
+                'programme' => 2,
+                'plan de cours' => 2,
+                'structure' => 1,
+                'support de cours' => 2
+            ],
+            ResourceType::EXERCICE->value => [
+                'exercice' => 3,
+                'problème' => 3,
+                'application' => 2,
+                'énoncé' => 2,
+                'série' => 2,
+                'questions' => 1,
+                'pratique' => 1,
+                'tp' => 2,
+                'td' => 2,
+                'cas pratique' => 2,
+                'activité' => 1
+            ],
+            ResourceType::EXAMEN->value => [
+                'sujet' => 3,
+                'examen' => 3,
+                'épreuve' => 2,
+                'test' => 2,
+                'session' => 1,
+                'baccalauréat' => 3,
+                'bepc' => 3,
+                'concours' => 3,
+                'interro' => 2,
+                'cc' => 2,
+                'partiel' => 3,
+                'dst' => 2,
+                'évaluation' => 2
+            ],
+            ResourceType::CORRIGE->value => [
+                'correction' => 3,
+                'corrigé' => 3,
+                'réponse' => 2,
+                'solution' => 2,
+                'résolution' => 2,
+                'démonstration' => 2,
+                'explication' => 1,
+                'clé de réponse' => 2
+            ],
+            ResourceType::FICHE->value => [
+                'résumé' => 3,
+                'synthèse' => 2,
+                'fiche' => 3,
+                'bilan' => 2,
+                'notes' => 1,
+                'essentiel' => 2,
+                'schéma récapitulatif' => 2
+            ],
+            ResourceType::MEMOIRE->value => [
+                'mémoire' => 3,
+                'rapport' => 3,
+                'recherche' => 2,
+                'soutenance' => 2,
+                'étude' => 2,
+                'problématique' => 2,
+                'introduction générale' => 2,
+                'conclusion' => 2,
+                'bibliographie' => 2
+            ],
+            ResourceType::PRESENTATION->value => [
+                'présentation' => 3,
+                'diapositive' => 2,
+                'powerpoint' => 2,
+                'slide' => 2,
+                'conférence' => 2,
+                'exposé' => 2,
+                'oral' => 2,
+                'affiche' => 2,
+                'document visuel' => 2
+            ]
         ];
 
         foreach ($patterns as $type => $keywords) {
@@ -347,14 +430,16 @@ class ResourceValidatorService
                 $count = substr_count($texte, $mot);
                 $scores[$type] += $count * $poids;
             }
+            // Normalisation (échelle selon taille texte)
             $scores[$type] = $scores[$type] / max(1, $wordCount / 1000);
         }
 
         arsort($scores);
         $bestType = key($scores);
-        
+
         return $scores[$bestType] >= 0.5 ? ResourceType::from($bestType) : ResourceType::AUTRE;
     }
+
 
     private function calculerScoreContenu(string $texte, Classe $classe, Subject $subject, Serie $serie): float
     {
@@ -376,7 +461,7 @@ class ResourceValidatorService
 
         $trouves = 0;
         $texteLower = Str::lower($texte);
-        
+
         foreach ($motsCles as $mot) {
             if (Str::contains($texteLower, Str::lower($mot))) {
                 $trouves++;
@@ -446,7 +531,7 @@ class ResourceValidatorService
     {
         $process = new Process($command);
         $process->setTimeout($timeout ?? self::PROCESS_TIMEOUT);
-        
+
         try {
             $process->mustRun();
             return $process->getOutput();
@@ -471,7 +556,7 @@ class ResourceValidatorService
 
         $wordCount = str_word_count($texte);
         $uniqueWords = count(array_unique(explode(' ', $texte)));
-        
+
         return $wordCount > 50 && $uniqueWords > 20;
     }
 
